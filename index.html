@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>호텔 인스타 파트너센터</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; background-color: #f4f5f7; }
+        
+        /* 달력 디자인 커스텀 */
+        #calendar {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 캘린더 안의 방 정보 블록 디자인 (야놀자 스타일) */
+        .fc-event {
+            cursor: pointer;
+            border: none !important;
+            margin-bottom: 2px !important;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .room-block {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .room-name { font-weight: bold; }
+        .room-price { font-weight: bold; }
+        
+        /* 예약 마감이면 회색, 가능하면 초록색, 특가는 빨간색 */
+        .status-available { background-color: #e8f5e9; color: #2e7d32; border-left: 3px solid #2e7d32; }
+        .status-full { background-color: #ffebee; color: #c62828; border-left: 3px solid #c62828; text-decoration: line-through; }
+        .status-custom { background-color: #fff3e0; color: #ef6c00; border-left: 3px solid #ef6c00; } /* 특가 */
+
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align: center; color: #333;">📅 호텔 인스타 판매 캘린더</h1>
+    
+    <div id='calendar'></div>
+
+    <script>
+        // ==========================================
+        // 1. Supabase 연결 (네 키로 바꿔줘!)
+        // ==========================================
+        const supabaseUrl = '여기에_URL_붙여넣기'
+        const supabaseKey = '여기에_ANON_KEY_붙여넣기'
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            // 2. 달력 기본 설정 (FullCalendar)
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth', // 월별 보기
+                locale: 'ko',               // 한국어 설정
+                height: 'auto',             // 높이 자동
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,listWeek'
+                },
+                
+                // 3. 데이터 가져오기 (Supabase -> 달력)
+                events: async function(info, successCallback, failureCallback) {
+                    
+                    // Supabase에서 inventory와 rooms 정보를 합쳐서 가져옴
+                    // (날짜 범위에 맞는 데이터만 가져오게 설정)
+                    const { data, error } = await supabase
+                        .from('inventory')
+                        .select(`
+                            date, price, stock, is_available, is_custom,
+                            rooms ( name )
+                        `)
+                        .gte('date', info.startStr.split('T')[0]) // 달력에 보이는 시작 날짜부터
+                        .lte('date', info.endStr.split('T')[0]);  // 달력에 보이는 끝 날짜까지
+
+                    if (error) {
+                        console.error('에러:', error);
+                        failureCallback(error);
+                        return;
+                    }
+
+                    // 가져온 데이터를 달력 형식(Event)으로 변환
+                    const events = data.map(item => {
+                        let colorClass = 'status-available';
+                        if (!item.is_available || item.stock <= 0) colorClass = 'status-full';
+                        else if (item.is_custom) colorClass = 'status-custom'; // 특가는 주황색
+
+                        return {
+                            title: item.rooms.name, // 방 이름
+                            start: item.date,       // 날짜
+                            extendedProps: {        // 추가 정보 (가격 등)
+                                price: item.price,
+                                stock: item.stock
+                            },
+                            classNames: [colorClass] // 색상 입히기
+                        }
+                    });
+
+                    successCallback(events);
+                },
+
+                // 4. 달력에 그려지는 모양 꾸미기 (방 이름 + 가격)
+                eventContent: function(arg) {
+                    let price = arg.event.extendedProps.price.toLocaleString();
+                    let stock = arg.event.extendedProps.stock;
+                    let name = arg.event.title;
+                    
+                    // HTML로 예쁘게 만들기
+                    let html = `
+                        <div class="room-block">
+                            <span class="room-name">${name}</span>
+                            <span class="room-price">${price}원</span>
+                        </div>
+                        <div style="font-size:10px; text-align:right;">남은방: ${stock}</div>
+                    `;
+                    return { html: html }
+                }
+            });
+
+            // 달력 그리기 시작!
+            calendar.render();
+        });
+    </script>
+
+</body>
+</html>
