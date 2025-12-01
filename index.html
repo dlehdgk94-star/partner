@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>호텔 인스타 파트너센터</title>
+    <title>insta 파트너센터</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -20,67 +20,69 @@
             padding: 0; 
             background-color: #f5f6f8; 
             height: 100vh;
-            display: flex; /* 좌우 배치를 위한 Flexbox */
+            display: flex; 
         }
 
-        /* 1. 좌측 사이드바 (메뉴) */
+        /* 1. 좌측 사이드바 (색상 변경됨!) */
         .sidebar {
             width: 250px;
-            background-color: #1a3c6e; /* 야놀자 스타일 네이비 */
+            background-color: #202b41; /* 사진과 비슷한 딥 다크 네이비 */
             color: white;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0; /* 폭이 줄어들지 않음 */
+            flex-shrink: 0;
         }
 
         .logo-area {
             padding: 20px;
-            font-size: 18px;
+            font-size: 20px; /* 글씨 조금 키움 */
             font-weight: bold;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .menu-item {
             padding: 15px 25px;
-            color: #b0c4de;
+            color: #aeb9cc; /* 은은한 회색빛 텍스트 */
             text-decoration: none;
             display: flex;
             align-items: center;
             transition: 0.3s;
             cursor: pointer;
+            font-size: 15px;
         }
 
-        .menu-item i { margin-right: 10px; width: 20px; text-align: center; }
-        .menu-item:hover { background-color: #264d85; color: white; }
-        .menu-item.active { background-color: #264d85; color: white; border-left: 4px solid #00bcd4; }
+        .menu-item i { margin-right: 12px; width: 20px; text-align: center; }
+        .menu-item:hover { background-color: #2d3b55; color: white; }
+        .menu-item.active { background-color: #2d3b55; color: white; border-left: 4px solid #00bcd4; }
 
-        /* 2. 우측 메인 컨텐츠 영역 */
+        /* 2. 우측 메인 컨텐츠 */
         .main-content {
-            flex-grow: 1; /* 남은 공간 다 차지 */
-            overflow-y: auto; /* 스크롤 가능 */
+            flex-grow: 1; 
+            overflow-y: auto; 
             padding: 40px;
         }
 
-        /* 3. 컨텐츠 내부 정렬 컨테이너 (제목과 달력 라인 맞추기용) */
         .content-container {
             max-width: 1400px;
-            margin: 0 auto; /* 중앙 정렬 */
+            margin: 0 auto; 
         }
 
-        /* 제목 스타일 */
         .page-title {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             color: #333;
             margin: 0 0 10px 0;
-            text-align: left; /* 왼쪽 정렬 */
+            text-align: left;
         }
         .page-desc {
             color: #666;
             font-size: 14px;
             margin: 0 0 20px 0;
-            text-align: left; /* 왼쪽 정렬 */
+            text-align: left;
         }
 
         /* ====================
@@ -135,7 +137,7 @@
 
     <nav class="sidebar">
         <div class="logo-area">
-            <i class="fa-solid fa-hotel"></i> 호텔 인스타
+            <i class="fa-solid fa-hotel"></i> insta 파트너센터
         </div>
         <a href="#" class="menu-item"><i class="fa-solid fa-house"></i> 홈</a>
         <a href="#" class="menu-item active"><i class="fa-solid fa-calendar-check"></i> 판매 관리</a>
@@ -159,6 +161,16 @@
         const supabaseKey = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27'
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
 
+        // ★ 객실 정렬 순서 정의 (숫자가 작을수록 위로 올라감)
+        const roomPriority = {
+            '스탠다드': 1,
+            '디럭스': 2,
+            '프리미엄': 3,
+            '럭셔리': 4,
+            '트윈': 5,
+            '특실': 6
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
 
@@ -172,6 +184,9 @@
                     right: 'next'
                 },
                 titleFormat: { year: 'numeric', month: '2-digit' },
+
+                // ★ 정렬 설정: 우리가 만든 'sortIndex' 기준으로 정렬하라!
+                eventOrder: 'sortIndex',
                 
                 // 데이터 가져오기
                 events: async function(info, successCallback, failureCallback) {
@@ -191,9 +206,15 @@
                     }
 
                     const events = data.map(item => {
+                        // 방 이름에 따라 우선순위 번호 매기기 (없으면 99번으로 맨 뒤로)
+                        const sortIndex = roomPriority[item.rooms.name] || 99;
+
                         return {
                             title: item.rooms.name,
                             start: item.date,
+                            // ★ 여기에 정렬용 번호를 넣어줌
+                            sortIndex: sortIndex, 
+                            
                             extendedProps: {
                                 room_id: item.room_id,
                                 price: item.price,
