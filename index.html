@@ -18,15 +18,15 @@
             font-family: 'Noto Sans KR', sans-serif; 
             margin: 0; 
             padding: 0; 
-            background-color: #ff9800; 
+            background-color: #f5f6f8; 
             height: 100vh;
             display: flex; 
         }
 
-        /* 1. 좌측 사이드바 (색상 변경됨!) */
+        /* 1. 좌측 사이드바 (색상 변경됨: 비비드 오렌지!) */
         .sidebar {
             width: 250px;
-            background-color: #FF5000; /* 사진과 비슷한 딥 다크 네이비 */
+            background-color: #FF5000; /* 요청하신 오렌지 색상 */
             color: white;
             display: flex;
             flex-direction: column;
@@ -35,9 +35,9 @@
 
         .logo-area {
             padding: 20px;
-            font-size: 20px; /* 글씨 조금 키움 */
+            font-size: 20px;
             font-weight: bold;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
             margin-bottom: 10px;
             display: flex;
             align-items: center;
@@ -46,7 +46,7 @@
 
         .menu-item {
             padding: 15px 25px;
-            color: #aeb9cc; /* 은은한 회색빛 텍스트 */
+            color: #ffe0b2; /* 연한 살구색 텍스트 */
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -56,8 +56,10 @@
         }
 
         .menu-item i { margin-right: 12px; width: 20px; text-align: center; }
-        .menu-item:hover { background-color: #2d3b55; color: white; }
-        .menu-item.active { background-color: #2d3b55; color: white; border-left: 4px solid #00bcd4; }
+        
+        /* 오렌지 배경에 맞는 호버 효과 */
+        .menu-item:hover { background-color: #e64a00; color: white; }
+        .menu-item.active { background-color: #d84315; color: white; border-left: 4px solid #fff; }
 
         /* 2. 우측 메인 컨텐츠 */
         .main-content {
@@ -118,7 +120,7 @@
             transition: all 0.2s;
         }
         .room-card:hover {
-            border-color: #b0bec5;
+            border-color: #ffcc80; /* 호버 시 오렌지빛 테두리 */
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
@@ -126,11 +128,13 @@
         .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; margin-bottom: 4px; }
         .badge-selling { background-color: #66bb6a; }
         .badge-soldout { background-color: #bdbdbd; }
-        .badge-custom { background-color: #ff9800; }
+        .badge-custom { background-color: #FF5000; } /* 뱃지도 오렌지색으로 통일 */
 
         .room-name { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .room-price { display: block; font-size: 12px; color: #555; text-align: right; }
-        .room-stock { font-size: 10px; color: #999; float: left; }
+        
+        /* 재고/예약 표시 스타일 */
+        .room-stock { font-size: 11px; color: #777; float: left; letter-spacing: -0.5px; }
     </style>
 </head>
 <body>
@@ -161,7 +165,7 @@
         const supabaseKey = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27'
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
 
-        // ★ 객실 정렬 순서 정의 (숫자가 작을수록 위로 올라감)
+        // ★ 객실 정렬 순서 정의
         const roomPriority = {
             '스탠다드': 1,
             '디럭스': 2,
@@ -185,7 +189,7 @@
                 },
                 titleFormat: { year: 'numeric', month: '2-digit' },
 
-                // ★ 정렬 설정: 우리가 만든 'sortIndex' 기준으로 정렬하라!
+                // 정렬 설정
                 eventOrder: 'sortIndex',
                 
                 // 데이터 가져오기
@@ -194,8 +198,8 @@
                         .from('inventory')
                         .select(`
                             room_id, date, price, stock, is_available, is_custom,
-                            rooms ( name )
-                        `)
+                            rooms ( name, total_rooms ) 
+                        `) // ★ total_rooms(전체 방 개수)를 가져와야 예약 수를 계산 가능!
                         .gte('date', info.startStr.split('T')[0])
                         .lte('date', info.endStr.split('T')[0]);
 
@@ -206,19 +210,26 @@
                     }
 
                     const events = data.map(item => {
-                        // 방 이름에 따라 우선순위 번호 매기기 (없으면 99번으로 맨 뒤로)
                         const sortIndex = roomPriority[item.rooms.name] || 99;
+                        
+                        // ★ 예약 수 계산 로직
+                        // 전체 방 개수(total_rooms)가 없으면 기본값 0 처리
+                        const totalRooms = item.rooms.total_rooms || 0;
+                        // 예약된 방 = 전체 - 남은 방(stock)
+                        // 만약 재고가 전체보다 많을 순 없으니 최소 0으로 방어
+                        const reservedCount = Math.max(0, totalRooms - item.stock);
 
                         return {
                             title: item.rooms.name,
                             start: item.date,
-                            // ★ 여기에 정렬용 번호를 넣어줌
                             sortIndex: sortIndex, 
                             
                             extendedProps: {
                                 room_id: item.room_id,
                                 price: item.price,
                                 stock: item.stock,
+                                total_rooms: totalRooms,       // 전체 방 개수 저장
+                                reserved_count: reservedCount, // 계산된 예약 수 저장
                                 is_available: item.is_available,
                                 is_custom: item.is_custom
                             }
@@ -242,12 +253,13 @@
                         badgeHTML = `<span class="badge badge-selling">판매중</span>`;
                     }
 
+                    // ★ [수정됨] 예약 0 / 재고 2 형식으로 표시
                     let html = `
                         <div class="room-card">
                             <div>${badgeHTML}</div>
                             <div class="room-name">${name}</div>
                             <div style="margin-top:4px;">
-                                <span class="room-stock">재고 ${props.stock}</span>
+                                <span class="room-stock">예약 ${props.reserved_count} / 재고 ${props.stock}</span>
                                 <span class="room-price">${price}원</span>
                                 <div style="clear:both;"></div>
                             </div>
@@ -273,6 +285,9 @@
                                 <div style="margin-bottom: 10px;">
                                     <label>🛏️ 남은 방 (개)</label>
                                     <input id="swal-stock" type="number" class="swal2-input" style="width: 100%; box-sizing: border-box;" value="${props.stock}">
+                                    <div style="font-size:12px; color:#888; margin-top:4px;">
+                                        * 전체 객실 수: ${props.total_rooms}개
+                                    </div>
                                 </div>
                                 <div style="margin-top:15px; display: flex; align-items: center;">
                                     <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''} style="transform: scale(1.5); margin-right: 10px;">
@@ -283,7 +298,7 @@
                         showCancelButton: true,
                         confirmButtonText: '저장하기',
                         cancelButtonText: '취소',
-                        confirmButtonColor: '#ff3366',
+                        confirmButtonColor: '#FF5000', // 버튼 색도 오렌지로 맞춤
                         preConfirm: async () => {
                             const newPrice = document.getElementById('swal-price').value;
                             const newStock = document.getElementById('swal-stock').value;
