@@ -2,37 +2,103 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>호텔 인스타 판매 캘린더</title>
+    <title>호텔 인스타 파트너센터</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* 기본 배경 및 폰트 */
-        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; background-color: #f0f2f5; }
-        
-        /* 캘린더 전체 틀 디자인 */
+        /* ====================
+           레이아웃 (Layout)
+           ==================== */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f5f6f8; 
+            height: 100vh;
+            display: flex; /* 좌우 배치를 위한 Flexbox */
+        }
+
+        /* 1. 좌측 사이드바 (메뉴) */
+        .sidebar {
+            width: 250px;
+            background-color: #1a3c6e; /* 야놀자 스타일 네이비 */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; /* 폭이 줄어들지 않음 */
+        }
+
+        .logo-area {
+            padding: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+        }
+
+        .menu-item {
+            padding: 15px 25px;
+            color: #b0c4de;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .menu-item i { margin-right: 10px; width: 20px; text-align: center; }
+        .menu-item:hover { background-color: #264d85; color: white; }
+        .menu-item.active { background-color: #264d85; color: white; border-left: 4px solid #00bcd4; }
+
+        /* 2. 우측 메인 컨텐츠 영역 */
+        .main-content {
+            flex-grow: 1; /* 남은 공간 다 차지 */
+            overflow-y: auto; /* 스크롤 가능 */
+            padding: 40px;
+        }
+
+        /* 3. 컨텐츠 내부 정렬 컨테이너 (제목과 달력 라인 맞추기용) */
+        .content-container {
+            max-width: 1400px;
+            margin: 0 auto; /* 중앙 정렬 */
+        }
+
+        /* 제목 스타일 */
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 10px 0;
+            text-align: left; /* 왼쪽 정렬 */
+        }
+        .page-desc {
+            color: #666;
+            font-size: 14px;
+            margin: 0 0 20px 0;
+            text-align: left; /* 왼쪽 정렬 */
+        }
+
+        /* ====================
+           캘린더 디자인
+           ==================== */
         #calendar {
             background: white;
             padding: 20px;
-            border-radius: 8px; /* 둥근 모서리 */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* 은은한 그림자 */
-            max-width: 1400px; /* 넓게 보기 */
-            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             min-height: 900px;
         }
 
-        /* 캘린더 헤더 (날짜 부분) 스타일 */
         .fc-toolbar-title { font-size: 1.5em !important; font-weight: bold; color: #333; }
         .fc-col-header-cell { background-color: #fafafa; padding: 10px 0; border-bottom: 2px solid #ddd; }
-        
-        /* 일요일 빨간색, 토요일 파란색 */
         .fc-day-sun .fc-col-header-cell-cushion { color: #e53935; }
         .fc-day-sat .fc-col-header-cell-cushion { color: #1e88e5; }
 
-        /* =========================================
-           ★ 핵심: 달력 내부 '방 카드' 디자인 (야놀자 스타일)
-           ========================================= */
         .fc-event {
             background: none !important;
             border: none !important;
@@ -40,7 +106,7 @@
             margin-bottom: 4px !important;
         }
 
-        /* 방 정보를 담는 하얀 박스 */
+        /* 방 카드 디자인 */
         .room-card {
             background-color: #fff;
             border: 1px solid #eee;
@@ -55,57 +121,35 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* 판매중/마감 뱃지 */
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 4px;
-        }
-        .badge-selling { background-color: #66bb6a; } /* 판매중 (초록) */
-        .badge-soldout { background-color: #bdbdbd; } /* 마감 (회색) */
-        .badge-custom { background-color: #ff9800; }  /* 특가 (주황) */
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; margin-bottom: 4px; }
+        .badge-selling { background-color: #66bb6a; }
+        .badge-soldout { background-color: #bdbdbd; }
+        .badge-custom { background-color: #ff9800; }
 
-        /* 방 이름 */
-        .room-name {
-            display: block;
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* 방 가격 */
-        .room-price {
-            display: block;
-            font-size: 12px;
-            color: #555;
-            text-align: right; /* 가격은 오른쪽 정렬 */
-        }
-        
-        /* 재고 표시 (작게) */
-        .room-stock {
-            font-size: 10px;
-            color: #999;
-            float: left;
-        }
-
+        .room-name { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .room-price { display: block; font-size: 12px; color: #555; text-align: right; }
+        .room-stock { font-size: 10px; color: #999; float: left; }
     </style>
 </head>
 <body>
 
-    <h2 style="padding-left: 20px; color: #333;">판매 캘린더</h2>
-    <p style="padding-left: 20px; color: #888; font-size: 13px; margin-bottom: 20px;">
-        상품의 판매 상태, 재고, 가격을 날짜별로 관리하세요. 방을 클릭하면 수정할 수 있습니다.
-    </p>
+    <nav class="sidebar">
+        <div class="logo-area">
+            <i class="fa-solid fa-hotel"></i> 호텔 인스타
+        </div>
+        <a href="#" class="menu-item"><i class="fa-solid fa-house"></i> 홈</a>
+        <a href="#" class="menu-item active"><i class="fa-solid fa-calendar-check"></i> 판매 관리</a>
+        <a href="#" class="menu-item"><i class="fa-solid fa-calculator"></i> 정산</a>
+    </nav>
 
-    <div id='calendar'></div>
+    <main class="main-content">
+        <div class="content-container">
+            <h2 class="page-title">판매 캘린더</h2>
+            <p class="page-desc">상품의 판매 상태, 재고, 가격을 날짜별로 관리하세요. 방을 클릭하면 수정할 수 있습니다.</p>
+            
+            <div id='calendar'></div>
+        </div>
+    </main>
 
     <script>
         // ==========================================
@@ -122,15 +166,14 @@
                 initialView: 'dayGridMonth',
                 locale: 'ko',
                 height: 'auto',
-                // 상단 툴바 디자인 (심플하게)
                 headerToolbar: {
                     left: 'prev',
                     center: 'title',
-                    right: 'next' // today 버튼 뺌 (심플하게)
+                    right: 'next'
                 },
-                titleFormat: { year: 'numeric', month: '2-digit' }, // "2025. 12" 형태로 표시
+                titleFormat: { year: 'numeric', month: '2-digit' },
                 
-                // [데이터 가져오기]
+                // 데이터 가져오기
                 events: async function(info, successCallback, failureCallback) {
                     const { data, error } = await supabase
                         .from('inventory')
@@ -147,7 +190,6 @@
                         return;
                     }
 
-                    // 데이터를 이벤트 형태로 변환
                     const events = data.map(item => {
                         return {
                             title: item.rooms.name,
@@ -164,15 +206,12 @@
                     successCallback(events);
                 },
 
-                // ==========================================
-                // ★ [핵심 디자인] 이벤트를 '카드' 형태로 그리기
-                // ==========================================
+                // 카드 디자인 그리기
                 eventContent: function(arg) {
                     let props = arg.event.extendedProps;
-                    let price = Number(props.price).toLocaleString(); // 가격 콤마 찍기
+                    let price = Number(props.price).toLocaleString();
                     let name = arg.event.title;
 
-                    // 1. 상태에 따른 뱃지 결정 (판매중 vs 마감)
                     let badgeHTML = '';
                     if (!props.is_available || props.stock <= 0) {
                         badgeHTML = `<span class="badge badge-soldout">마감</span>`;
@@ -182,7 +221,6 @@
                         badgeHTML = `<span class="badge badge-selling">판매중</span>`;
                     }
 
-                    // 2. HTML 조립 (사진과 비슷한 구조)
                     let html = `
                         <div class="room-card">
                             <div>${badgeHTML}</div>
@@ -197,7 +235,7 @@
                     return { html: html }
                 },
 
-                // 클릭 시 수정 팝업 (기존 기능 유지)
+                // 수정 팝업
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     const date = info.event.startStr;
@@ -241,9 +279,7 @@
                                 .eq('room_id', props.room_id)
                                 .eq('date', date);
 
-                            if (error) {
-                                Swal.showValidationMessage(`에러: ${error.message}`);
-                            }
+                            if (error) Swal.showValidationMessage(`에러: ${error.message}`);
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
