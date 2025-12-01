@@ -2,59 +2,114 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>호텔 인스타 파트너센터</title>
+    <title>호텔 인스타 판매 캘린더</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; background-color: #f4f5f7; }
+        /* 기본 배경 및 폰트 */
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; background-color: #f0f2f5; }
         
-        /* 달력 디자인 */
+        /* 캘린더 전체 틀 디자인 */
         #calendar {
             background: white;
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            max-width: 1200px;
+            border-radius: 8px; /* 둥근 모서리 */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* 은은한 그림자 */
+            max-width: 1400px; /* 넓게 보기 */
             margin: 0 auto;
+            min-height: 900px;
         }
 
-        /* 캘린더 안의 방 정보 블록 */
-        .fc-event {
-            cursor: pointer; /* 클릭 가능하다는 손가락 표시 */
-            border: none !important;
-            margin-bottom: 2px !important;
-            padding: 4px;
-            border-radius: 4px;
-            transition: transform 0.1s;
-        }
-        .fc-event:hover { transform: scale(1.02); } /* 마우스 올리면 살짝 커짐 */
-
-        .room-block {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-        }
-        .room-name { font-weight: bold; }
-        .room-price { font-weight: bold; }
+        /* 캘린더 헤더 (날짜 부분) 스타일 */
+        .fc-toolbar-title { font-size: 1.5em !important; font-weight: bold; color: #333; }
+        .fc-col-header-cell { background-color: #fafafa; padding: 10px 0; border-bottom: 2px solid #ddd; }
         
-        /* 상태별 색상 디자인 */
-        .status-available { background-color: #e8f5e9; color: #2e7d32; border-left: 3px solid #2e7d32; }
-        .status-full { background-color: #ffebee; color: #c62828; border-left: 3px solid #c62828; text-decoration: line-through; }
-        .status-custom { background-color: #fff3e0; color: #ef6c00; border-left: 3px solid #ef6c00; } /* 특가/수정됨 */
+        /* 일요일 빨간색, 토요일 파란색 */
+        .fc-day-sun .fc-col-header-cell-cushion { color: #e53935; }
+        .fc-day-sat .fc-col-header-cell-cushion { color: #1e88e5; }
+
+        /* =========================================
+           ★ 핵심: 달력 내부 '방 카드' 디자인 (야놀자 스타일)
+           ========================================= */
+        .fc-event {
+            background: none !important;
+            border: none !important;
+            cursor: pointer;
+            margin-bottom: 4px !important;
+        }
+
+        /* 방 정보를 담는 하얀 박스 */
+        .room-card {
+            background-color: #fff;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .room-card:hover {
+            border-color: #b0bec5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* 판매중/마감 뱃지 */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 4px;
+        }
+        .badge-selling { background-color: #66bb6a; } /* 판매중 (초록) */
+        .badge-soldout { background-color: #bdbdbd; } /* 마감 (회색) */
+        .badge-custom { background-color: #ff9800; }  /* 특가 (주황) */
+
+        /* 방 이름 */
+        .room-name {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 방 가격 */
+        .room-price {
+            display: block;
+            font-size: 12px;
+            color: #555;
+            text-align: right; /* 가격은 오른쪽 정렬 */
+        }
+        
+        /* 재고 표시 (작게) */
+        .room-stock {
+            font-size: 10px;
+            color: #999;
+            float: left;
+        }
+
     </style>
 </head>
 <body>
 
-    <h1 style="text-align: center; color: #333;">📅 호텔 인스타 판매 관리</h1>
-    <p style="text-align: center; color: #666; font-size: 14px;">방을 클릭하면 가격과 재고를 수정할 수 있습니다.</p>
-    
+    <h2 style="padding-left: 20px; color: #333;">판매 캘린더</h2>
+    <p style="padding-left: 20px; color: #888; font-size: 13px; margin-bottom: 20px;">
+        상품의 판매 상태, 재고, 가격을 날짜별로 관리하세요. 방을 클릭하면 수정할 수 있습니다.
+    </p>
+
     <div id='calendar'></div>
 
     <script>
         // ==========================================
-        // 1. Supabase 연결 (네 키로 바꿔줘!)
+        // 1. Supabase 연결
         // ==========================================
         const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co'
         const supabaseKey = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27'
@@ -67,11 +122,13 @@
                 initialView: 'dayGridMonth',
                 locale: 'ko',
                 height: 'auto',
+                // 상단 툴바 디자인 (심플하게)
                 headerToolbar: {
-                    left: 'prev,next today',
+                    left: 'prev',
                     center: 'title',
-                    right: 'dayGridMonth,listWeek'
+                    right: 'next' // today 버튼 뺌 (심플하게)
                 },
+                titleFormat: { year: 'numeric', month: '2-digit' }, // "2025. 12" 형태로 표시
                 
                 // [데이터 가져오기]
                 events: async function(info, successCallback, failureCallback) {
@@ -90,102 +147,108 @@
                         return;
                     }
 
+                    // 데이터를 이벤트 형태로 변환
                     const events = data.map(item => {
-                        let colorClass = 'status-available';
-                        if (!item.is_available || item.stock <= 0) colorClass = 'status-full';
-                        else if (item.is_custom) colorClass = 'status-custom';
-
                         return {
                             title: item.rooms.name,
                             start: item.date,
-                            // 클릭했을 때 수정하기 위해 필요한 정보들을 다 담아둠
                             extendedProps: {
-                                room_id: item.room_id, // 중요! 수정할 때 씀
+                                room_id: item.room_id,
                                 price: item.price,
                                 stock: item.stock,
                                 is_available: item.is_available,
                                 is_custom: item.is_custom
-                            },
-                            classNames: [colorClass]
+                            }
                         }
                     });
                     successCallback(events);
                 },
 
-                // [화면 꾸미기]
+                // ==========================================
+                // ★ [핵심 디자인] 이벤트를 '카드' 형태로 그리기
+                // ==========================================
                 eventContent: function(arg) {
-                    let price = arg.event.extendedProps.price.toLocaleString();
-                    let stock = arg.event.extendedProps.stock;
+                    let props = arg.event.extendedProps;
+                    let price = Number(props.price).toLocaleString(); // 가격 콤마 찍기
                     let name = arg.event.title;
-                    
+
+                    // 1. 상태에 따른 뱃지 결정 (판매중 vs 마감)
+                    let badgeHTML = '';
+                    if (!props.is_available || props.stock <= 0) {
+                        badgeHTML = `<span class="badge badge-soldout">마감</span>`;
+                    } else if (props.is_custom) {
+                        badgeHTML = `<span class="badge badge-custom">특가</span>`;
+                    } else {
+                        badgeHTML = `<span class="badge badge-selling">판매중</span>`;
+                    }
+
+                    // 2. HTML 조립 (사진과 비슷한 구조)
                     let html = `
-                        <div class="room-block">
-                            <span class="room-name">${name}</span>
-                            <span class="room-price">${price}원</span>
+                        <div class="room-card">
+                            <div>${badgeHTML}</div>
+                            <div class="room-name">${name}</div>
+                            <div style="margin-top:4px;">
+                                <span class="room-stock">재고 ${props.stock}</span>
+                                <span class="room-price">${price}원</span>
+                                <div style="clear:both;"></div>
+                            </div>
                         </div>
-                        <div style="font-size:10px; text-align:right;">재고: ${stock}</div>
                     `;
                     return { html: html }
                 },
 
-                // ==========================================
-                // ★ [핵심 기능] 클릭하면 수정 팝업 띄우기!
-                // ==========================================
+                // 클릭 시 수정 팝업 (기존 기능 유지)
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     const date = info.event.startStr;
                     const roomName = info.event.title;
 
-                    // SweetAlert2 팝업창 띄우기
                     Swal.fire({
                         title: `${date} <br> ${roomName}`,
                         html: `
-                            <div style="text-align:left; font-size:14px;">
-                                <label>💰 가격 (원)</label>
-                                <input id="swal-price" type="number" class="swal2-input" value="${props.price}">
-                                
-                                <label>🛏️ 남은 방 (개)</label>
-                                <input id="swal-stock" type="number" class="swal2-input" value="${props.stock}">
-                                
-                                <div style="margin-top:15px;">
-                                    <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''}>
-                                    <label for="swal-available">예약 가능 여부 (체크=가능)</label>
+                            <div style="text-align:left; font-size:14px; padding: 0 20px;">
+                                <div style="margin-bottom: 10px;">
+                                    <label>💰 가격 (원)</label>
+                                    <input id="swal-price" type="number" class="swal2-input" style="width: 100%; box-sizing: border-box;" value="${props.price}">
                                 </div>
-                                <div style="margin-top:5px; color:blue;">
-                                    <input type="checkbox" id="swal-custom" checked disabled>
-                                    <label for="swal-custom">특가 고정 (자동 체크됨)</label>
+                                <div style="margin-bottom: 10px;">
+                                    <label>🛏️ 남은 방 (개)</label>
+                                    <input id="swal-stock" type="number" class="swal2-input" style="width: 100%; box-sizing: border-box;" value="${props.stock}">
+                                </div>
+                                <div style="margin-top:15px; display: flex; align-items: center;">
+                                    <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''} style="transform: scale(1.5); margin-right: 10px;">
+                                    <label for="swal-available">예약 가능 여부 (체크=가능)</label>
                                 </div>
                             </div>
                         `,
                         showCancelButton: true,
                         confirmButtonText: '저장하기',
                         cancelButtonText: '취소',
+                        confirmButtonColor: '#ff3366',
                         preConfirm: async () => {
-                            // 사용자가 입력한 값 가져오기
                             const newPrice = document.getElementById('swal-price').value;
                             const newStock = document.getElementById('swal-stock').value;
                             const newAvailable = document.getElementById('swal-available').checked;
 
-                            // Supabase에 업데이트 요청 보내기!
                             const { error } = await supabase
                                 .from('inventory')
                                 .update({ 
                                     price: newPrice,
                                     stock: newStock,
                                     is_available: newAvailable,
-                                    is_custom: true // 직접 수정했으니 '잠금' 설정!
+                                    is_custom: true
                                 })
-                                .eq('room_id', props.room_id) // 이 방의
-                                .eq('date', date);            // 이 날짜만 수정해라
+                                .eq('room_id', props.room_id)
+                                .eq('date', date);
 
                             if (error) {
-                                Swal.showValidationMessage(`에러 발생: ${error.message}`);
+                                Swal.showValidationMessage(`에러: ${error.message}`);
                             }
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            Swal.fire('저장 완료!', '성공적으로 수정되었습니다.', 'success');
-                            calendar.refetchEvents(); // 달력 새로고침 (바뀐 값 바로 보여주기)
+                            Swal.fire({ title: '저장 완료!', icon: 'success', timer: 1000, showConfirmButton: false });
+                            calendar.refetchEvents();
                         }
                     });
                 }
