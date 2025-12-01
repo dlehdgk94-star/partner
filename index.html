@@ -5,11 +5,12 @@
     <title>호텔 인스타 파트너센터</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; background-color: #f4f5f7; }
         
-        /* 달력 디자인 커스텀 */
+        /* 달력 디자인 */
         #calendar {
             background: white;
             padding: 20px;
@@ -19,14 +20,17 @@
             margin: 0 auto;
         }
 
-        /* 캘린더 안의 방 정보 블록 디자인 (야놀자 스타일) */
+        /* 캘린더 안의 방 정보 블록 */
         .fc-event {
-            cursor: pointer;
+            cursor: pointer; /* 클릭 가능하다는 손가락 표시 */
             border: none !important;
             margin-bottom: 2px !important;
             padding: 4px;
             border-radius: 4px;
+            transition: transform 0.1s;
         }
+        .fc-event:hover { transform: scale(1.02); } /* 마우스 올리면 살짝 커짐 */
+
         .room-block {
             display: flex;
             justify-content: space-between;
@@ -35,16 +39,16 @@
         .room-name { font-weight: bold; }
         .room-price { font-weight: bold; }
         
-        /* 예약 마감이면 회색, 가능하면 초록색, 특가는 빨간색 */
+        /* 상태별 색상 디자인 */
         .status-available { background-color: #e8f5e9; color: #2e7d32; border-left: 3px solid #2e7d32; }
         .status-full { background-color: #ffebee; color: #c62828; border-left: 3px solid #c62828; text-decoration: line-through; }
-        .status-custom { background-color: #fff3e0; color: #ef6c00; border-left: 3px solid #ef6c00; } /* 특가 */
-
+        .status-custom { background-color: #fff3e0; color: #ef6c00; border-left: 3px solid #ef6c00; } /* 특가/수정됨 */
     </style>
 </head>
 <body>
 
-    <h1 style="text-align: center; color: #333;">📅 호텔 인스타 판매 캘린더</h1>
+    <h1 style="text-align: center; color: #333;">📅 호텔 인스타 판매 관리</h1>
+    <p style="text-align: center; color: #666; font-size: 14px;">방을 클릭하면 가격과 재고를 수정할 수 있습니다.</p>
     
     <div id='calendar'></div>
 
@@ -59,30 +63,26 @@
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
 
-            // 2. 달력 기본 설정 (FullCalendar)
             var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth', // 월별 보기
-                locale: 'ko',               // 한국어 설정
-                height: 'auto',             // 높이 자동
+                initialView: 'dayGridMonth',
+                locale: 'ko',
+                height: 'auto',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,listWeek'
                 },
                 
-                // 3. 데이터 가져오기 (Supabase -> 달력)
+                // [데이터 가져오기]
                 events: async function(info, successCallback, failureCallback) {
-                    
-                    // Supabase에서 inventory와 rooms 정보를 합쳐서 가져옴
-                    // (날짜 범위에 맞는 데이터만 가져오게 설정)
                     const { data, error } = await supabase
                         .from('inventory')
                         .select(`
-                            date, price, stock, is_available, is_custom,
+                            room_id, date, price, stock, is_available, is_custom,
                             rooms ( name )
                         `)
-                        .gte('date', info.startStr.split('T')[0]) // 달력에 보이는 시작 날짜부터
-                        .lte('date', info.endStr.split('T')[0]);  // 달력에 보이는 끝 날짜까지
+                        .gte('date', info.startStr.split('T')[0])
+                        .lte('date', info.endStr.split('T')[0]);
 
                     if (error) {
                         console.error('에러:', error);
@@ -90,45 +90,107 @@
                         return;
                     }
 
-                    // 가져온 데이터를 달력 형식(Event)으로 변환
                     const events = data.map(item => {
                         let colorClass = 'status-available';
                         if (!item.is_available || item.stock <= 0) colorClass = 'status-full';
-                        else if (item.is_custom) colorClass = 'status-custom'; // 특가는 주황색
+                        else if (item.is_custom) colorClass = 'status-custom';
 
                         return {
-                            title: item.rooms.name, // 방 이름
-                            start: item.date,       // 날짜
-                            extendedProps: {        // 추가 정보 (가격 등)
+                            title: item.rooms.name,
+                            start: item.date,
+                            // 클릭했을 때 수정하기 위해 필요한 정보들을 다 담아둠
+                            extendedProps: {
+                                room_id: item.room_id, // 중요! 수정할 때 씀
                                 price: item.price,
-                                stock: item.stock
+                                stock: item.stock,
+                                is_available: item.is_available,
+                                is_custom: item.is_custom
                             },
-                            classNames: [colorClass] // 색상 입히기
+                            classNames: [colorClass]
                         }
                     });
-
                     successCallback(events);
                 },
 
-                // 4. 달력에 그려지는 모양 꾸미기 (방 이름 + 가격)
+                // [화면 꾸미기]
                 eventContent: function(arg) {
                     let price = arg.event.extendedProps.price.toLocaleString();
                     let stock = arg.event.extendedProps.stock;
                     let name = arg.event.title;
                     
-                    // HTML로 예쁘게 만들기
                     let html = `
                         <div class="room-block">
                             <span class="room-name">${name}</span>
                             <span class="room-price">${price}원</span>
                         </div>
-                        <div style="font-size:10px; text-align:right;">남은방: ${stock}</div>
+                        <div style="font-size:10px; text-align:right;">재고: ${stock}</div>
                     `;
                     return { html: html }
+                },
+
+                // ==========================================
+                // ★ [핵심 기능] 클릭하면 수정 팝업 띄우기!
+                // ==========================================
+                eventClick: function(info) {
+                    const props = info.event.extendedProps;
+                    const date = info.event.startStr;
+                    const roomName = info.event.title;
+
+                    // SweetAlert2 팝업창 띄우기
+                    Swal.fire({
+                        title: `${date} <br> ${roomName}`,
+                        html: `
+                            <div style="text-align:left; font-size:14px;">
+                                <label>💰 가격 (원)</label>
+                                <input id="swal-price" type="number" class="swal2-input" value="${props.price}">
+                                
+                                <label>🛏️ 남은 방 (개)</label>
+                                <input id="swal-stock" type="number" class="swal2-input" value="${props.stock}">
+                                
+                                <div style="margin-top:15px;">
+                                    <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''}>
+                                    <label for="swal-available">예약 가능 여부 (체크=가능)</label>
+                                </div>
+                                <div style="margin-top:5px; color:blue;">
+                                    <input type="checkbox" id="swal-custom" checked disabled>
+                                    <label for="swal-custom">특가 고정 (자동 체크됨)</label>
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: '저장하기',
+                        cancelButtonText: '취소',
+                        preConfirm: async () => {
+                            // 사용자가 입력한 값 가져오기
+                            const newPrice = document.getElementById('swal-price').value;
+                            const newStock = document.getElementById('swal-stock').value;
+                            const newAvailable = document.getElementById('swal-available').checked;
+
+                            // Supabase에 업데이트 요청 보내기!
+                            const { error } = await supabase
+                                .from('inventory')
+                                .update({ 
+                                    price: newPrice,
+                                    stock: newStock,
+                                    is_available: newAvailable,
+                                    is_custom: true // 직접 수정했으니 '잠금' 설정!
+                                })
+                                .eq('room_id', props.room_id) // 이 방의
+                                .eq('date', date);            // 이 날짜만 수정해라
+
+                            if (error) {
+                                Swal.showValidationMessage(`에러 발생: ${error.message}`);
+                            }
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire('저장 완료!', '성공적으로 수정되었습니다.', 'success');
+                            calendar.refetchEvents(); // 달력 새로고침 (바뀐 값 바로 보여주기)
+                        }
+                    });
                 }
             });
 
-            // 달력 그리기 시작!
             calendar.render();
         });
     </script>
