@@ -119,9 +119,10 @@
             position: relative;
         }
 
+        /* [수정] 활성화 상태 색상 변경 (파란색 -> 주황색) */
         .date-box.active {
-            border: 2px solid #5bc0de;
-            background-color: #f0f9fb;
+            border: 2px solid #ff6900;
+            background-color: #fff0e6; /* 연한 주황색 배경 */
         }
 
         .date-box .date-text {
@@ -129,20 +130,23 @@
             font-weight: bold;
             margin-bottom: 10px;
             color: #333;
+            white-space: nowrap; /* 한 줄 표시를 위해 추가 */
         }
 
+        /* [수정] 카운트 색상 변경 (파란색 -> 주황색) */
         .date-box .count {
             font-size: 0.9rem;
-            color: #5bc0de;
+            color: #ff6900;
             font-weight: bold;
         }
         
+        /* [수정] 오늘 배지 색상 변경 (파란색 -> 주황색) */
         .today-badge {
             position: absolute;
             top: -10px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #5bc0de; /* 하늘색 계열 */
+            background-color: #ff6900;
             color: white;
             font-size: 0.7rem;
             padding: 2px 6px;
@@ -173,10 +177,11 @@
             margin-right: -1px;
         }
         
+        /* [수정] 탭 활성화 색상 변경 (파란색 -> 주황색) */
         .status-tabs button.active {
-            background-color: #5bc0de;
+            background-color: #ff6900;
             color: white;
-            border-color: #5bc0de;
+            border-color: #ff6900;
         }
         
         .status-tabs button:first-child { border-radius: 4px 0 0 4px; }
@@ -229,7 +234,8 @@
         }
 
         .room-type { font-weight: bold; display: block; }
-        .stay-info { font-size: 0.8rem; color: #5bc0de; }
+        /* [수정] 숙박 정보 색상 변경 (파란색 -> 주황색) */
+        .stay-info { font-size: 0.8rem; color: #ff6900; }
         
         .price-original { text-decoration: line-through; color: #999; font-size: 0.8rem; display: block;}
         .price-final { font-weight: bold; color: #333; }
@@ -274,32 +280,32 @@
             
             <div class="date-container">
                 <div class="date-box">
-                    <div class="date-text">2025.11<br>29 토</div>
+                    <div class="date-text">2025.11.29 (토)</div>
                     <div class="count">숙박 11</div>
                 </div>
                 <div class="date-box">
-                    <div class="date-text">2025.11<br>30 일</div>
+                    <div class="date-text">2025.11.30 (일)</div>
                     <div class="count">숙박 6</div>
                 </div>
                 <div class="date-box">
-                    <div class="date-text">2025.12<br>01 월</div>
+                    <div class="date-text">2025.12.01 (월)</div>
                     <div class="count">숙박 6</div>
                 </div>
                 <div class="date-box active">
                     <div class="today-badge">오늘</div>
-                    <div class="date-text">2025.12<br>02 화</div>
+                    <div class="date-text">2025.12.02 (화)</div>
                     <div class="count">숙박 1</div>
                 </div>
                 <div class="date-box">
-                    <div class="date-text">2025.12<br>03 수</div>
+                    <div class="date-text">2025.12.03 (수)</div>
                     <div class="count">숙박 1</div>
                 </div>
                 <div class="date-box">
-                    <div class="date-text">2025.12<br>04 목</div>
+                    <div class="date-text">2025.12.04 (목)</div>
                     <div class="count">숙박 2</div>
                 </div>
                 <div class="date-box">
-                    <div class="date-text">2025.12<br>05 금</div>
+                    <div class="date-text">2025.12.05 (금)</div>
                     <div class="count">숙박 3</div>
                 </div>
             </div>
@@ -405,7 +411,7 @@
             
             <div style="text-align:center; margin-top:20px;">
                 <button style="border:1px solid #ddd; background:white; padding:5px 10px;">&lt;</button>
-                <button style="border:1px solid #5bc0de; background:white; color:#5bc0de; font-weight:bold; padding:5px 10px;">1</button>
+                <button style="border:1px solid #ff6900; background:white; color:#ff6900; font-weight:bold; padding:5px 10px;">1</button>
                 <button style="border:1px solid #ddd; background:white; padding:5px 10px;">&gt;</button>
             </div>
         </div>
