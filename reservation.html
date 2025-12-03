@@ -38,11 +38,15 @@
         .nav-btn:hover { background-color: #f0f0f0; color: #ff6900; border-color: #ff6900; }
         
         .date-container { display: flex; justify-content: space-between; gap: 10px; flex-grow: 1; }
-        .date-box { border: 1px solid #ddd; border-radius: 4px; padding: 15px 0; flex: 1; text-align: center; cursor: pointer; position: relative; transition: all 0.2s; }
+        .date-box { border: 1px solid #ddd; border-radius: 4px; padding: 15px 0; flex: 1; text-align: center; cursor: pointer; position: relative; transition: all 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .date-box:hover { border-color: #ffb080; }
         .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; }
-        .date-box .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #333; white-space: nowrap; }
-        .date-box .count { font-size: 0.9rem; color: #ccc; font-weight: normal; }
+        .date-box .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 5px; color: #333; white-space: nowrap; }
+        
+        /* [수정됨] 카운트 스타일: 텍스트와 숫자가 한 줄에 예쁘게 보이도록 */
+        .date-box .count-wrapper { font-size: 0.85rem; color: #888; display: flex; align-items: center; gap: 4px; }
+        .date-box .count-num { font-weight: bold; color: #ff6900; font-size: 1rem; }
+        
         .today-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background-color: #ff6900; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; display: none; }
         .date-box.is-today .today-badge { display: block; }
         .date-box.is-today { border-color: #ff6900; } 
@@ -196,7 +200,7 @@
     </main>
 
     <script>
-        // 1. Supabase 설정 (사용자 정보 반영됨)
+        // 1. Supabase 설정
         const supabaseUrl = 'https://eyasihczaqsacenkjhns.supabase.co';
         const supabaseKey = 'sb_publishable_Kg1O0QUrwWJzQTDCZnbhGcw_otKoMO27'; 
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -212,9 +216,8 @@
         const selectedDateDisplay = document.getElementById('selectedDateDisplay');
         const todayBtn = document.getElementById('todayBtn');
 
-        // 날짜 상태 관리
         let currentStartDate = new Date();
-        currentStartDate.setDate(currentStartDate.getDate() - 3); // 기본: 오늘 기준 3일 전부터 표시
+        currentStartDate.setDate(currentStartDate.getDate() - 3);
         let selectedDate = new Date(); 
 
         // 3. 유틸리티 함수들
@@ -246,22 +249,19 @@
                    date1.getDate() === date2.getDate();
         }
 
-        // 4. 핵심 로직: 달력 렌더링 및 예약 카운팅
+        // 4. 핵심 로직
 
         // (1) 달력 UI 그리기
         async function renderCalendar() {
             dateContainer.innerHTML = ''; 
             const today = new Date();
             
-            // 현재 보여줄 7일의 시작과 끝 날짜 계산
             const rangeStart = new Date(currentStartDate);
             const rangeEnd = new Date(currentStartDate);
             rangeEnd.setDate(rangeEnd.getDate() + 6); 
 
-            // 상단 날짜 텍스트 업데이트
             selectedDateDisplay.textContent = formatDisplayDate(selectedDate);
 
-            // 7일치 날짜 박스 생성
             for (let i = 0; i < 7; i++) {
                 const renderDate = new Date(currentStartDate);
                 renderDate.setDate(renderDate.getDate() + i);
@@ -270,75 +270,74 @@
                 const box = document.createElement('div');
                 box.className = 'date-box';
                 
-                // 오늘 날짜 표시
                 if (isSameDate(renderDate, today)) box.classList.add('is-today');
-                // 선택된 날짜 표시
                 if (isSameDate(renderDate, selectedDate)) box.classList.add('active');
 
                 const badge = isSameDate(renderDate, today) ? `<div class="today-badge">오늘</div>` : '';
                 
-                // HTML 구조: 날짜 텍스트 + 카운트 표시 영역(id 부여)
+                // [수정됨] 숙박 텍스트 옆에 숫자가 오도록 마크업 변경
                 box.innerHTML = `
                     ${badge}
                     <div class="date-text">${formatDisplayDate(renderDate)}</div>
-                    <div class="count" id="count-${isoDate}" style="font-size:0.85rem; color:#ccc;">조회중...</div>
+                    <div class="count-wrapper" id="count-${isoDate}">
+                        숙박 <span class="count-num">-</span>
+                    </div>
                 `;
 
-                // 클릭 이벤트
                 box.addEventListener('click', () => {
                     selectedDate = new Date(renderDate);
-                    renderCalendar(); // UI 갱신 (선택 효과)
-                    loadBookingsForDate(selectedDate); // 하단 상세 리스트 로드
+                    renderCalendar(); 
+                    loadBookingsForDate(selectedDate); 
                 });
                 dateContainer.appendChild(box);
             }
 
-            // 박스가 다 그려진 후, Supabase에서 숫자를 가져와 채워넣기
             await fetchAndDisplayCounts(rangeStart, rangeEnd);
         }
 
-        // (2) [중요] Supabase에서 예약 건수 가져와서 달력에 표시하기
+        // (2) [수정됨] 카운트 표시 로직
         async function fetchAndDisplayCounts(start, end) {
             const startStr = toISODateString(start);
             const endStr = toISODateString(end);
             
             try {
-                // bookings 테이블에서 check_in 날짜만 가져옵니다.
                 const { data, error } = await supabase
                     .from('bookings')
                     .select('check_in')
-                    .gte('check_in', startStr) // 시작일 이상
-                    .lte('check_in', endStr);  // 종료일 이하
+                    .gte('check_in', startStr)
+                    .lte('check_in', endStr);
 
+                // 에러가 나면 콘솔에만 표시하고 UI는 '0'으로 두거나 유지
                 if (error) {
                     console.error('카운트 로딩 실패:', error);
                     return;
                 }
 
-                // 날짜별로 개수 세기 (예: {'2025-12-03': 2, '2025-12-04': 1})
                 const counts = {};
                 if (data) {
                     data.forEach(booking => {
-                        // check_in이 '2025-12-03' 형태의 문자열로 온다고 가정
                         const dateKey = booking.check_in;
                         counts[dateKey] = (counts[dateKey] || 0) + 1;
                     });
                 }
 
-                // UI 업데이트 Loop
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(currentStartDate);
                     d.setDate(d.getDate() + i);
-                    const k = toISODateString(d); // YYYY-MM-DD
+                    const k = toISODateString(d);
                     
                     const countEl = document.getElementById(`count-${k}`);
                     if (countEl) {
                         const count = counts[k] || 0;
-                        if (count > 0) {
-                            countEl.innerHTML = `<span style="color:#ff6900; font-weight:bold;">숙박 ${count}건</span>`;
+                        // 0건이어도 '숙박 0'으로 깔끔하게 표시
+                        countEl.innerHTML = `숙박 <span class="count-num">${count}</span>`;
+                        
+                        // 0건이면 회색, 1건 이상이면 주황색 강조
+                        const numSpan = countEl.querySelector('.count-num');
+                        if(count === 0) {
+                            numSpan.style.color = '#ccc';
                         } else {
-                            countEl.innerHTML = `예약 없음`;
-                            countEl.style.color = '#ccc';
+                            numSpan.style.color = '#ff6900';
                         }
                     }
                 }
@@ -347,13 +346,12 @@
             }
         }
 
-        // (3) 하단 상세 리스트 로드 함수
+        // (3) 상세 리스트 로드
         async function loadBookingsForDate(date) {
             const dateStr = toISODateString(date);
             bookingTableBody.innerHTML = `<tr><td colspan="9" style="padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 데이터 불러오는 중...</td></tr>`;
             
             try {
-                // rooms 테이블 정보도 같이 가져오면 좋겠지만, 일단 bookings 위주로 처리
                 const { data, error } = await supabase
                     .from('bookings')
                     .select('*') 
@@ -374,7 +372,6 @@
                 data.forEach(booking => {
                     totalSales += (booking.total_price || 0);
 
-                    // 옵션 처리
                     let optionsHtml = '<span style="color:#ccc;">-</span>';
                     if (booking.selected_options) {
                         try {
@@ -386,7 +383,6 @@
                         } catch (e) {}
                     }
 
-                    // SNS 처리
                     let snsBlock = '';
                     if (booking.social_insta) snsBlock += `<span class="sns-tag sns-insta"><i class="fa-brands fa-instagram"></i> Insta</span>`;
                     if (booking.social_tiktok) snsBlock += `<span class="sns-tag sns-tiktok"><i class="fa-brands fa-tiktok"></i> TikTok</span>`;
@@ -420,11 +416,13 @@
 
             } catch (err) {
                 console.error(err);
-                bookingTableBody.innerHTML = `<tr><td colspan="9" style="color:red; padding:30px;">오류 발생: ${err.message}</td></tr>`;
+                bookingTableBody.innerHTML = `<tr><td colspan="9" style="color:red; padding:30px;">
+                    오류 발생: ${err.message}<br>
+                    <span style="font-size:0.8rem; color:#666;">(Tip: HTML 파일을 바로 열면 보안 문제로 막힐 수 있습니다. VS Code의 Live Server를 이용해보세요.)</span>
+                </td></tr>`;
             }
         }
 
-        // 5. 이벤트 리스너 설정
         prevBtn.addEventListener('click', () => { currentStartDate.setDate(currentStartDate.getDate() - 1); renderCalendar(); });
         nextBtn.addEventListener('click', () => { currentStartDate.setDate(currentStartDate.getDate() + 1); renderCalendar(); });
         
@@ -452,15 +450,10 @@
             } 
         });
 
-        // 6. [중요] 실시간 구독 설정 (Realtime)
-        // bookings 테이블에 변경사항이 생기면 달력과 리스트를 새로고침합니다.
         const channel = supabase
             .channel('public:bookings')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
-                console.log('실시간 예약 변경 감지:', payload);
-                renderCalendar(); // 달력 숫자 갱신
-                
-                // 만약 변경된 예약의 날짜가 현재 보고 있는 상세 내역 날짜와 같다면 리스트도 갱신
+                renderCalendar(); 
                 if (payload.new && payload.new.check_in === toISODateString(selectedDate)) {
                     loadBookingsForDate(selectedDate);
                 } else if (payload.old && payload.old.check_in === toISODateString(selectedDate)) {
@@ -469,7 +462,6 @@
             })
             .subscribe();
 
-        // 초기 실행
         renderCalendar();
         loadBookingsForDate(selectedDate);
     </script>
