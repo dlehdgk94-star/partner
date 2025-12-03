@@ -7,26 +7,36 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- 기존 스타일 유지 --- */
+        /* --- 스타일 --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f5f7fa; color: #333; display: flex; min-height: 100vh; }
+        
+        /* 사이드바 */
         .sidebar { width: 240px; background-color: #ff6900; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
         .menu-list { list-style: none; margin-top: 10px; }
         .menu-item { padding: 15px 20px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
         .menu-item:hover { background-color: #e65c00; }
         .menu-item.active { background-color: #cc5200; font-weight: bold; }
+
+        /* 메인 컨텐츠 */
         .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
         .page-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; color: #333; }
         .page-desc { font-size: 0.9rem; color: #666; margin-bottom: 30px; }
+        
         .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* 달력 헤더 및 슬라이더 */
         .weekly-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .weekly-header h3 { font-size: 1rem; display: flex; align-items: center; gap: 8px; margin: 0; }
-        .btn-today { font-size: 0.8rem; padding: 4px 10px; margin: 0 5px; border: 1px solid #ccc; background-color: white; border-radius: 4px; cursor: pointer; color: #333; transition: all 0.2s; font-family: 'Noto Sans KR', sans-serif; }
+        
+        .btn-today { font-size: 0.8rem; padding: 4px 10px; margin: 0 5px; border: 1px solid #ccc; background-color: white; border-radius: 4px; cursor: pointer; color: #333; transition: all 0.2s; }
         .btn-today:hover { background-color: #f0f0f0; border-color: #999; color: #ff6900; }
+        
         .date-slider-wrapper { display: flex; align-items: center; gap: 10px; }
         .nav-btn { background: white; border: 1px solid #ddd; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; transition: 0.2s; }
         .nav-btn:hover { background-color: #f0f0f0; color: #ff6900; border-color: #ff6900; }
+        
         .date-container { display: flex; justify-content: space-between; gap: 10px; flex-grow: 1; }
         .date-box { border: 1px solid #ddd; border-radius: 4px; padding: 15px 0; flex: 1; text-align: center; cursor: pointer; position: relative; transition: all 0.2s; }
         .date-box:hover { border-color: #ffb080; }
@@ -36,37 +46,50 @@
         .today-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background-color: #ff6900; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; display: none; }
         .date-box.is-today .today-badge { display: block; }
         .date-box.is-today { border-color: #ff6900; } 
+
         #datePickerInput { position: absolute; opacity: 0; z-index: -1; width: 1px; height: 1px; }
         .calendar-trigger { cursor: pointer; color: #666; transition: 0.2s; margin-left: 5px; font-size: 1.1rem; }
         .calendar-trigger:hover { color: #ff6900; }
-        .search-filter { border: 1px solid #eee; }
+
+        /* 필터 및 테이블 */
         .filter-summary { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 4px; }
         .status-tabs button { padding: 8px 16px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 0.9rem; margin-right: -1px; }
         .status-tabs button.active { background-color: #ff6900; color: white; border-color: #ff6900; }
         .status-tabs button:first-child { border-radius: 4px 0 0 4px; }
         .status-tabs button:last-child { border-radius: 0 4px 4px 0; }
+
         .table-controls { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
         .summary-text { font-size: 0.9rem; font-weight: bold; }
         
-        /* 테이블 스타일 수정 */
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; border-top: 2px solid #ddd; }
+        /* 데이터 테이블 스타일 */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; border-top: 2px solid #ddd; table-layout: fixed; }
         .data-table th { background-color: #f5f5f5; padding: 12px 8px; text-align: center; border-bottom: 1px solid #ddd; font-weight: bold; color: #555; white-space: nowrap; }
-        .data-table td { padding: 12px 8px; border-bottom: 1px solid #eee; vertical-align: middle; text-align: center; }
+        .data-table td { padding: 12px 8px; border-bottom: 1px solid #eee; vertical-align: middle; text-align: center; word-wrap: break-word; }
         
-        .room-type { font-weight: bold; display: block; font-size: 0.9rem; }
-        .stay-info { font-size: 0.8rem; color: #ff6900; }
-        .price-final { font-weight: bold; color: #333; font-size: 0.9rem; }
-        .option-tag { display: inline-block; background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin: 2px; color: #555; }
+        /* 컬럼별 너비 조정 (총합 100%) */
+        .col-req { width: 15%; }
+        .col-booker { width: 10%; }
+        .col-contact { width: 18%; }
+        .col-room { width: 8%; }
+        .col-opt { width: 15%; }
+        .col-date { width: 12%; }
+        .col-res { width: 10%; }
+        .col-price { width: 8%; }
+        .col-mng { width: 4%; }
+
+        .room-type { font-weight: bold; display: block; font-size: 0.9rem; color: #333; }
+        .price-final { font-weight: bold; color: #333; font-size: 0.95rem; }
+        .option-tag { display: inline-block; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin: 2px; color: #555; border: 1px solid #e0e0e0; }
         
-        /* SNS 아이콘 스타일 */
-        .sns-icon { margin-right: 4px; font-size: 0.9rem; }
-        .sns-insta { color: #E1306C; }
-        .sns-tiktok { color: #000000; }
-        
-        /* 연락처/이메일 텍스트 작게 */
-        .contact-info { font-size: 0.8rem; color: #666; display: block; margin-top: 2px; }
+        /* SNS 및 연락처 스타일 */
+        .contact-row { display: flex; align-items: center; gap: 5px; justify-content: center; margin-bottom: 2px; font-size: 0.8rem; color: #555; }
+        .sns-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: white; margin: 1px; }
+        .sns-insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .sns-tiktok { background-color: #000000; }
+        .email-text { font-size: 0.75rem; color: #888; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .btn-action { border: 1px solid #ccc; background: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .btn-action:hover { background-color: #f0f0f0; border-color: #999; }
     </style>
 </head>
 <body>
@@ -112,20 +135,20 @@
 
         <div class="card search-filter">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h4><i class="fa-solid fa-magnifying-glass"></i> 예약내역 상세 검색</h4>
+                <h4><i class="fa-solid fa-magnifying-glass"></i> 예약내역 상세 (Selected Date)</h4>
                 <button style="border:none; background:none; cursor:pointer;">펼치기 <i class="fa-solid fa-chevron-down"></i></button>
             </div>
             
-            <div class="filter-box" style="border-top:1px solid #eee; padding-top:15px;">
-                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">선택된 조회 일자</p>
-                <p style="font-size:0.9rem; color:#555;" id="selectedDateDisplay">날짜를 선택해주세요</p>
+            <div class="filter-box" style="border-top:1px solid #eee; padding-top:15px; margin-bottom: 15px;">
+                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px; color:#ff6900;">선택된 조회 일자 (체크인 기준)</p>
+                <h2 style="font-size:1.4rem; color:#333;" id="selectedDateDisplay">날짜를 선택해주세요</h2>
             </div>
 
             <div class="filter-summary">
                 <div class="status-tabs">
-                    <button class="active">입실 상태 전체</button>
-                    <button>입실 전만 보기</button>
-                    <button>입실 완료만 보기</button>
+                    <button class="active">전체 보기</button>
+                    <button>입실 전</button>
+                    <button>입실 완료</button>
                 </div>
             </div>
 
@@ -133,19 +156,30 @@
                 <div class="table-controls">
                     <span class="summary-text" id="tableSummary">조회 결과가 없습니다.</span>
                     <select style="padding:4px;">
-                        <option>입실일 내림차순</option>
+                        <option>최신 예약순</option>
                     </select>
                 </div>
 
                 <table class="data-table">
+                    <colgroup>
+                        <col class="col-req">
+                        <col class="col-booker">
+                        <col class="col-contact">
+                        <col class="col-room">
+                        <col class="col-opt">
+                        <col class="col-date">
+                        <col class="col-res">
+                        <col class="col-price">
+                        <col class="col-mng">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>요청사항</th> 
-                            <th>예약자 정보</th>
+                            <th>예약자</th>
                             <th>연락처 / SNS</th>
-                            <th>객실 타입</th>
+                            <th>객실</th>
                             <th>옵션</th>
-                            <th>입실/퇴실일시</th>
+                            <th>입실/퇴실</th>
                             <th>예약일시</th>
                             <th>금액</th>
                             <th>관리</th>
@@ -153,7 +187,7 @@
                     </thead>
                     <tbody id="bookingTableBody">
                         <tr>
-                            <td colspan="9" style="padding: 30px; color: #999;">날짜를 선택하면 예약 내역이 표시됩니다.</td>
+                            <td colspan="9" style="padding: 30px; color: #999;">위 달력에서 날짜를 선택하면 예약 내역이 표시됩니다.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -162,7 +196,7 @@
     </main>
 
    <script>
-        // 1. Supabase 설정 (정상)
+        // 1. Supabase 설정
         const supabaseUrl = 'https://eyasihczaqsacenkjhns.supabase.co';
         const supabaseKey = 'sb_publishable_Kg1O0QUrwWJzQTDCZnbhGcw_otKoMO27'; 
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -179,7 +213,7 @@
         const todayBtn = document.getElementById('todayBtn');
 
         let currentStartDate = new Date();
-        currentStartDate.setDate(currentStartDate.getDate() - 3);
+        currentStartDate.setDate(currentStartDate.getDate() - 3); // 3일 전부터 시작
         let selectedDate = new Date(); 
 
         // 3. 유틸리티 함수
@@ -217,6 +251,9 @@
             const rangeEnd = new Date(currentStartDate);
             rangeEnd.setDate(rangeEnd.getDate() + 6); 
 
+            // 선택된 날짜 텍스트 업데이트
+            selectedDateDisplay.textContent = formatDisplayDate(selectedDate);
+
             // 달력 박스 생성
             for (let i = 0; i < 7; i++) {
                 const renderDate = new Date(currentStartDate);
@@ -230,7 +267,6 @@
                 if (isSameDate(renderDate, today)) box.classList.add('is-today');
                 if (isSameDate(renderDate, selectedDate)) {
                     box.classList.add('active');
-                    selectedDateDisplay.textContent = `선택된 입실일: ${formatDisplayDate(renderDate)}`;
                 }
 
                 const badge = isSameDate(renderDate, today) ? `<div class="today-badge">오늘</div>` : '';
@@ -239,15 +275,15 @@
                 box.addEventListener('click', () => {
                     selectedDate = new Date(renderDate);
                     renderCalendar(); 
-                    loadBookingsForDate(selectedDate);
+                    loadBookingsForDate(selectedDate); // 클릭 시 데이터 로드
                 });
                 dateContainer.appendChild(box);
             }
 
             await fetchAndDisplayCounts(rangeStart, rangeEnd);
-            loadBookingsForDate(selectedDate);
         }
 
+        // 일별 예약 건수 조회 (카운트 표시용)
         async function fetchAndDisplayCounts(start, end) {
             const startStr = toISODateString(start);
             const endStr = toISODateString(end);
@@ -266,23 +302,23 @@
             } catch (err) { console.error(err); }
         }
 
-        // [수정된 부분] 안전 모드 데이터 로딩 (객실 연결 제거)
+        // [중요] 선택된 날짜의 상세 예약 정보 로드
         async function loadBookingsForDate(date) {
             const dateStr = toISODateString(date);
-            bookingTableBody.innerHTML = `<tr><td colspan="9" style="padding:30px;">데이터 불러오는 중...</td></tr>`;
+            bookingTableBody.innerHTML = `<tr><td colspan="9" style="padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 데이터 불러오는 중...</td></tr>`;
             
             try {
-                // rooms (name) 부분을 제거하고 bookings 테이블만 단독 조회
+                // bookings 테이블 조회
                 const { data, error } = await supabase
                     .from('bookings')
                     .select('*') 
-                    .eq('check_in', dateStr)
-                    .order('created_at', { ascending: false });
+                    .eq('check_in', dateStr) // 체크인 날짜 일치
+                    .order('created_at', { ascending: false }); // 최신 예약순
 
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    bookingTableBody.innerHTML = `<tr><td colspan="9" style="padding:30px; color:#999;">${dateStr} 예약 내역이 없습니다.</td></tr>`;
+                    bookingTableBody.innerHTML = `<tr><td colspan="9" style="padding:30px; color:#999;">${dateStr} 예약된 내역이 없습니다.</td></tr>`;
                     tableSummary.innerText = `총 0개 | 매출액 0원`;
                     return;
                 }
@@ -293,51 +329,66 @@
                 data.forEach(booking => {
                     totalSales += (booking.total_price || 0);
 
-                    // 옵션 파싱
-                    let optionsHtml = '-';
+                    // 1. 옵션 파싱 (JSON or String)
+                    let optionsHtml = '<span style="color:#ccc;">-</span>';
                     if (booking.selected_options) {
                         try {
                             const opts = typeof booking.selected_options === 'string' ? JSON.parse(booking.selected_options) : booking.selected_options;
-                            const optList = Array.isArray(opts) ? opts : Object.keys(opts);
-                            optionsHtml = optList.map(opt => `<span class="option-tag">${opt}</span>`).join('');
-                        } catch (e) { optionsHtml = '형식오류'; }
+                            // 배열이거나 객체일 경우 처리
+                            const optList = Array.isArray(opts) ? opts : Object.keys(opts).filter(k => opts[k]);
+                            if (optList.length > 0) {
+                                optionsHtml = optList.map(opt => `<span class="option-tag">${opt}</span>`).join('');
+                            }
+                        } catch (e) { optionsHtml = '<span style="color:red; font-size:0.7rem;">형식오류</span>'; }
                     }
 
-                    // SNS 정보
-                    let snsInfo = '';
-                    if (booking.social_insta) snsInfo += `<div class="contact-info"><i class="fa-brands fa-instagram sns-icon sns-insta"></i> ${booking.social_insta}</div>`;
-                    if (booking.social_tiktok) snsInfo += `<div class="contact-info"><i class="fa-brands fa-tiktok sns-icon sns-tiktok"></i> ${booking.social_tiktok}</div>`;
-
+                    // 2. SNS 및 연락처 조합
+                    let snsBlock = '';
+                    if (booking.social_insta) snsBlock += `<span class="sns-tag sns-insta"><i class="fa-brands fa-instagram"></i> Insta</span>`;
+                    if (booking.social_tiktok) snsBlock += `<span class="sns-tag sns-tiktok"><i class="fa-brands fa-tiktok"></i> TikTok</span>`;
+                    
+                    // HTML 조립
                     html += `
                         <tr>
-                            <td style="color:#555; font-size:0.85rem; max-width:150px; word-break:keep-all;">${booking.guest_request || '-'}</td>
+                            <td style="color:#555; font-size:0.8rem; text-align:left;">
+                                ${booking.guest_request ? booking.guest_request : '<span style="color:#ccc;">없음</span>'}
+                            </td>
+                            
                             <td><strong>${booking.guest_name}</strong></td>
-                            <td style="text-align:left; padding-left:15px;">
-                                <div><i class="fa-solid fa-phone" style="font-size:0.7rem; color:#888;"></i> ${booking.phone}</div>
-                                <div class="contact-info">${booking.guest_email || '-'}</div>
-                                ${snsInfo}
+                            
+                            <td style="text-align:left; padding-left:10px;">
+                                <div class="contact-row"><i class="fa-solid fa-phone"></i> ${booking.phone}</div>
+                                ${booking.guest_email ? `<div class="email-text" title="${booking.guest_email}"><i class="fa-regular fa-envelope"></i> ${booking.guest_email}</div>` : ''}
+                                <div style="margin-top:4px;">${snsBlock}</div>
+                                ${booking.social_insta ? `<div style="font-size:0.75rem; color:#666;">@${booking.social_insta}</div>` : ''}
                             </td>
+                            
                             <td>
-                                <span class="room-type">객실 No. ${booking.room_id}</span>
+                                <span class="room-type">Room ${booking.room_id}</span>
                             </td>
-                            <td style="max-width:200px; text-align:left;">${optionsHtml}</td>
+                            
+                            <td style="text-align:left;">${optionsHtml}</td>
+                            
                             <td>
-                                <span style="font-size:0.8rem; color:#666;">입실: ${booking.check_in}</span><br>
-                                <span style="font-size:0.8rem; color:#666;">퇴실: ${booking.check_out}</span>
+                                <span style="font-size:0.8rem; color:#666;">In: ${booking.check_in}</span><br>
+                                <span style="font-size:0.8rem; color:#666;">Out: ${booking.check_out}</span>
                             </td>
+                            
                             <td><span style="font-size:0.8rem; color:#888;">${formatDateTime(booking.created_at)}</span></td>
+                            
                             <td><span class="price-final">${formatCurrency(booking.total_price || 0)}</span></td>
-                            <td><button class="btn-action">입실 호수 저장</button></td>
+                            
+                            <td><button class="btn-action">관리</button></td>
                         </tr>
                     `;
                 });
 
                 bookingTableBody.innerHTML = html;
-                tableSummary.innerText = `총 ${data.length}개 | 매출액 ${formatCurrency(totalSales)}`;
+                tableSummary.innerHTML = `총 <span style="color:#ff6900;">${data.length}</span>개 | 예상 매출 <span style="color:#ff6900;">${formatCurrency(totalSales)}</span>`;
 
             } catch (err) {
                 console.error(err);
-                bookingTableBody.innerHTML = `<tr><td colspan="9" style="color:red; padding:30px;">서버 연결 실패: ${err.message} (광고 차단 기능을 확인해주세요)</td></tr>`;
+                bookingTableBody.innerHTML = `<tr><td colspan="9" style="color:red; padding:30px;">서버 연결 실패: ${err.message}</td></tr>`;
             }
         }
 
@@ -346,17 +397,29 @@
         nextBtn.addEventListener('click', () => { currentStartDate.setDate(currentStartDate.getDate() + 1); renderCalendar(); });
         todayBtn.addEventListener('click', () => { 
             const now = new Date(); selectedDate = new Date(now); currentStartDate = new Date(now); currentStartDate.setDate(currentStartDate.getDate() - 3); renderCalendar(); 
+            loadBookingsForDate(selectedDate);
         });
         calendarIcon.addEventListener('click', () => { try { datePicker.showPicker(); } catch { datePicker.focus(); datePicker.click(); } });
         datePicker.addEventListener('change', (e) => { 
-            if(e.target.value) { const newDate = new Date(e.target.value); selectedDate = new Date(newDate); currentStartDate = new Date(newDate); currentStartDate.setDate(currentStartDate.getDate() - 3); renderCalendar(); } 
+            if(e.target.value) { 
+                const newDate = new Date(e.target.value); 
+                selectedDate = new Date(newDate); 
+                currentStartDate = new Date(newDate); 
+                currentStartDate.setDate(currentStartDate.getDate() - 3); 
+                renderCalendar(); 
+                loadBookingsForDate(selectedDate);
+            } 
         });
 
-        // 실시간 구독
-        supabase.channel('public:bookings').on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => { renderCalendar(); }).subscribe();
+        // 실시간 업데이트 (새 예약 들어오면 즉시 반영)
+        supabase.channel('public:bookings').on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => { 
+            renderCalendar(); 
+            loadBookingsForDate(selectedDate);
+        }).subscribe();
 
         // 초기 실행
         renderCalendar();
+        loadBookingsForDate(selectedDate);
     </script>
 </body>
 </html>
