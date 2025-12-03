@@ -43,7 +43,6 @@
         .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; }
         .date-box .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 5px; color: #333; white-space: nowrap; }
         
-        /* [수정됨] 카운트 스타일: 텍스트와 숫자가 한 줄에 예쁘게 보이도록 */
         .date-box .count-wrapper { font-size: 0.85rem; color: #888; display: flex; align-items: center; gap: 4px; }
         .date-box .count-num { font-weight: bold; color: #ff6900; font-size: 1rem; }
         
@@ -200,13 +199,14 @@
     </main>
 
     <script>
-        // 1. Supabase 설정 (수정됨)
-        // [중요] 주소 오타 수정됨: kjhns -> klhns
+        // 1. Supabase 설정
+        // 주소는 제가 이미 수정했습니다.
         const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
         
-        // [중요] 여기에 Settings > API > Project API keys > anon public 키를 복사해 넣으세요.
-        // (eyJ로 시작하는 아주 긴 문자열이어야 합니다. sb_publishable... 키는 안 됩니다!)
-        const supabaseKey = '여기에_대시보드에서_복사한_anon_public_키를_붙여넣으세요'; 
+        // [중요] 스크린샷의 'Legacy anon, service_role API keys' 탭에 있는
+        // eyJ로 시작하는 키를 복사해서 아래 따옴표 사이에 넣어주세요.
+        // (한글은 지우고 키만 넣어야 합니다)
+        const supabaseKey = '여기에_Legacy_탭의_anon_키를_넣으세요'; 
         
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -280,7 +280,6 @@
 
                 const badge = isSameDate(renderDate, today) ? `<div class="today-badge">오늘</div>` : '';
                 
-                // [수정됨] 숙박 텍스트 옆에 숫자가 오도록 마크업 변경
                 box.innerHTML = `
                     ${badge}
                     <div class="date-text">${formatDisplayDate(renderDate)}</div>
@@ -300,7 +299,7 @@
             await fetchAndDisplayCounts(rangeStart, rangeEnd);
         }
 
-        // (2) [수정됨] 카운트 표시 로직
+        // (2) 카운트 표시 로직
         async function fetchAndDisplayCounts(start, end) {
             const startStr = toISODateString(start);
             const endStr = toISODateString(end);
@@ -312,7 +311,6 @@
                     .gte('check_in', startStr)
                     .lte('check_in', endStr);
 
-                // 에러가 나면 콘솔에만 표시하고 UI는 '0'으로 두거나 유지
                 if (error) {
                     console.error('카운트 로딩 실패:', error);
                     return;
@@ -334,10 +332,8 @@
                     const countEl = document.getElementById(`count-${k}`);
                     if (countEl) {
                         const count = counts[k] || 0;
-                        // 0건이어도 '숙박 0'으로 깔끔하게 표시
                         countEl.innerHTML = `숙박 <span class="count-num">${count}</span>`;
                         
-                        // 0건이면 회색, 1건 이상이면 주황색 강조
                         const numSpan = countEl.querySelector('.count-num');
                         if(count === 0) {
                             numSpan.style.color = '#ccc';
