@@ -26,15 +26,15 @@
         /* 섹션 공통 카드 스타일 */
         .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* 1. 주간 입실 현황 (동적 제어 스타일 추가) */
+        /* 1. 주간 입실 현황 */
         .weekly-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .weekly-header h3 { font-size: 1rem; display: flex; align-items: center; gap: 8px; margin: 0; }
         
-        /* [추가] 오늘 버튼 스타일 */
+        /* 오늘 버튼 스타일 */
         .btn-today {
             font-size: 0.8rem;
             padding: 4px 10px;
-            margin-left: 5px; /* 아이콘과의 간격 */
+            margin-left: 5px; 
             margin-right: 5px;
             border: 1px solid #ccc;
             background-color: white;
@@ -75,14 +75,20 @@
         .today-badge {
             position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
             background-color: #ff6900; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px;
-            display: none; /* JS로 제어 */
+            display: none; 
         }
         .date-box.is-today .today-badge { display: block; }
         .date-box.is-today { border-color: #ff6900; } 
 
-        /* 숨겨진 날짜 입력창 */
-        #datePickerInput { visibility: hidden; position: absolute; width: 0; height: 0; }
-        .calendar-trigger { cursor: pointer; color: #666; transition: 0.2s; margin-left: 5px; }
+        /* [수정] 날짜 입력창 스타일 변경 (완전히 숨기지 않고 투명하게 처리하여 기능 보장) */
+        #datePickerInput { 
+            position: absolute; 
+            opacity: 0; 
+            z-index: -1; 
+            width: 1px; 
+            height: 1px; 
+        }
+        .calendar-trigger { cursor: pointer; color: #666; transition: 0.2s; margin-left: 5px; font-size: 1.1rem; }
         .calendar-trigger:hover { color: #ff6900; }
 
         /* 2. 검색 및 필터 */
@@ -133,15 +139,15 @@
                     
                     <button id="todayBtn" class="btn-today">오늘</button>
                     
-                    <label for="datePickerInput" class="calendar-trigger" title="특정 날짜로 이동">
+                    <span id="calendarIcon" class="calendar-trigger" title="달력 열기">
                         <i class="fa-regular fa-calendar-days"></i>
-                    </label>
+                    </span>
                     <input type="date" id="datePickerInput"> 
                 </h3>
             </div>
             
             <p style="font-size: 0.85rem; color:#666; margin-bottom:15px;">
-                화살표를 눌러 날짜를 이동하거나 달력 아이콘을 눌러 원하는 날짜(예: 2026년)를 조회하세요.<br>
+                화살표를 눌러 날짜를 이동하거나 <strong>달력 아이콘</strong>을 눌러 2026년, 2027년 등 먼 날짜를 조회하세요.<br>
             </p>
             
             <div class="date-slider-wrapper">
@@ -217,17 +223,18 @@
         const prevBtn = document.getElementById('prevDayBtn');
         const nextBtn = document.getElementById('nextDayBtn');
         const datePicker = document.getElementById('datePickerInput');
+        const calendarIcon = document.getElementById('calendarIcon'); // [추가] 아이콘 요소
         const selectedDateDisplay = document.getElementById('selectedDateDisplay');
-        const todayBtn = document.getElementById('todayBtn'); // [추가] 오늘 버튼 선택
+        const todayBtn = document.getElementById('todayBtn'); 
 
-        // 현재 기준 시작 날짜 (초기값: 오늘 기준 3일 전부터 시작해서 오늘이 가운데 오도록)
+        // 현재 기준 시작 날짜 (초기값: 오늘 기준 3일 전부터 시작)
         let currentStartDate = new Date();
         currentStartDate.setDate(currentStartDate.getDate() - 3);
 
         // 선택된 날짜 (초기값: 오늘)
         let selectedDate = new Date();
 
-        // 날짜 포맷 함수 (YYYY.MM.DD (요일))
+        // 날짜 포맷 함수
         function formatDate(date) {
             const days = ['일', '월', '화', '수', '목', '금', '토'];
             const yyyy = date.getFullYear();
@@ -246,7 +253,7 @@
 
         // 캘린더 렌더링 함수
         function renderCalendar() {
-            dateContainer.innerHTML = ''; // 기존 내용 비우기
+            dateContainer.innerHTML = ''; 
             const today = new Date();
 
             for (let i = 0; i < 7; i++) {
@@ -266,14 +273,13 @@
                 // 현재 선택된 날짜인지 확인 (활성화 스타일)
                 if (isSameDate(renderDate, selectedDate)) {
                     box.classList.add('active');
-                    // 하단 텍스트 업데이트
                     selectedDateDisplay.textContent = `선택된 입실일: ${formatDate(renderDate)}`;
                 }
 
-                // 오늘 배지 (오늘 날짜인 경우만)
+                // 오늘 배지
                 const badge = isSameDate(renderDate, today) ? `<div class="today-badge">오늘</div>` : '';
 
-                // 랜덤 예약 건수 (데모용)
+                // 랜덤 예약 건수
                 const randomCount = Math.floor(Math.random() * 15);
 
                 box.innerHTML = `
@@ -282,17 +288,17 @@
                     <div class="count">숙박 ${randomCount}</div>
                 `;
 
-                // 클릭 이벤트: 클릭하면 선택됨
+                // 클릭 이벤트
                 box.addEventListener('click', () => {
-                    selectedDate = new Date(renderDate); // 선택된 날짜 업데이트
-                    renderCalendar(); // 다시 그려서 active 클래스 적용
+                    selectedDate = new Date(renderDate);
+                    renderCalendar(); 
                 });
 
                 dateContainer.appendChild(box);
             }
         }
 
-        // 버튼 이벤트 리스너
+        // 화살표 버튼 이벤트
         prevBtn.addEventListener('click', () => {
             currentStartDate.setDate(currentStartDate.getDate() - 1);
             renderCalendar();
@@ -303,28 +309,44 @@
             renderCalendar();
         });
 
-        // [추가] 오늘 버튼 클릭 이벤트
+        // 오늘 버튼 클릭 이벤트
         todayBtn.addEventListener('click', () => {
             const now = new Date();
-            selectedDate = new Date(now); // 선택 날짜를 오늘로
+            selectedDate = new Date(now); 
             
-            // 캘린더 시작점을 오늘이 가운데 오도록 재설정
+            // 오늘이 가운데 오도록 재설정
             currentStartDate = new Date(now);
             currentStartDate.setDate(currentStartDate.getDate() - 3);
             
-            renderCalendar(); // 화면 갱신
+            renderCalendar(); 
         });
 
-        // Date Picker 변경 시 이벤트
+        // [추가] 아이콘 클릭 시 달력(Date Picker) 강제 열기
+        calendarIcon.addEventListener('click', () => {
+            // 브라우저의 기본 Date Picker 열기 (최신 브라우저 지원 API)
+            try {
+                datePicker.showPicker();
+            } catch (error) {
+                // 구형 브라우저 등에서 showPicker 미지원 시 fallback
+                // (일반적으로 label 연결로 작동하지만 명시적으로 focus)
+                datePicker.focus();
+                datePicker.click();
+            }
+        });
+
+        // Date Picker 날짜 선택 완료(변경) 시 이벤트
         datePicker.addEventListener('change', (e) => {
             if(e.target.value) {
                 const newDate = new Date(e.target.value);
-                selectedDate = new Date(newDate); // 선택된 날짜 변경
                 
-                // 캘린더 시작점을 선택된 날짜가 가운데 오도록 조정
+                // 1. 선택된 날짜 업데이트
+                selectedDate = new Date(newDate); 
+                
+                // 2. 슬라이더 위치 이동 (선택한 날짜가 가운데 오도록)
                 currentStartDate = new Date(newDate);
                 currentStartDate.setDate(currentStartDate.getDate() - 3);
                 
+                // 3. 화면 다시 그리기
                 renderCalendar();
             }
         });
