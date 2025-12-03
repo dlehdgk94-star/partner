@@ -26,7 +26,7 @@
         /* 카드 공통 스타일 */
         .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* [수정] 주간 현황 헤더 컨트롤 스타일 */
+        /* 주간 현황 헤더 컨트롤 스타일 */
         .weekly-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .weekly-title { font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         
@@ -43,49 +43,63 @@
             padding: 5px; transition: color 0.2s;
         }
         .calendar-icon-btn:hover { color: #ff6900; }
-        /* 실제 input date는 숨김 처리하고 아이콘 클릭 시 작동 */
         #date-picker-input {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             opacity: 0; cursor: pointer;
         }
 
-        /* [수정] 날짜 박스 컨테이너 (가로 스크롤 적용) */
-        .date-container-wrapper {
-            position: relative;
-            width: 100%;
-            overflow: hidden; /* 화살표 등 추가 확장성을 위해 */
+        /* [수정] 날짜 슬라이더 전체 영역 */
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            background-color: #fff;
+        }
+
+        /* [수정] 좌우 화살표 버튼 */
+        .nav-arrow {
+            width: 40px; height: 80px; /* 버튼 크기 */
+            border: 1px solid #eee; background-color: #fff;
+            border-radius: 4px; cursor: pointer;
+            color: #888; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .nav-arrow:hover { background-color: #f9f9f9; color: #ff6900; border-color: #ff6900; }
+
+        /* [수정] 날짜 박스 컨테이너 (7개 고정 노출) */
+        .date-view-window {
+            flex-grow: 1;
+            overflow: hidden; /* 넘치는 것 숨김 */
         }
         .date-container { 
             display: flex; 
             gap: 10px; 
-            overflow-x: auto; 
-            padding-bottom: 10px; /* 스크롤바 공간 확보 */
-            scroll-behavior: smooth;
+            /* 가로 스크롤 제거 (버튼으로 제어) */
+            width: 100%;
         }
-        /* 스크롤바 스타일 커스텀 */
-        .date-container::-webkit-scrollbar { height: 8px; }
-        .date-container::-webkit-scrollbar-thumb { background-color: #ddd; border-radius: 4px; }
-        .date-container::-webkit-scrollbar-track { background-color: #f9f9f9; }
 
         .date-box { 
-            min-width: 120px; /* 고정 너비 */
+            flex: 1; /* 부모 너비에 맞춰 7등분 */
             border: 1px solid #ddd; border-radius: 4px; padding: 15px 0; 
             text-align: center; cursor: pointer; position: relative; background: white;
-            flex-shrink: 0; /* 줄어들지 않도록 설정 */
             transition: border-color 0.2s, background-color 0.2s;
+            min-width: 0; /* flex box 축소 방지 */
         }
         .date-box:hover { border-color: #ff6900; }
         .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; }
         
-        .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #333; }
-        .count { font-size: 0.9rem; color: #ff6900; font-weight: bold; }
+        .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #333; white-space: nowrap; }
+        .count { font-size: 0.9rem; color: #ff6900; font-weight: bold; white-space: nowrap; }
         
         .today-badge { 
             position: absolute; top: -10px; left: 50%; transform: translateX(-50%); 
             background-color: #ff6900; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; 
-            display: none; /* JS로 제어 */
+            display: none; 
+            white-space: nowrap;
         }
-        .date-box.is-today .today-badge { display: block; } /* 오늘 날짜일 때만 표시 */
+        .date-box.is-today .today-badge { display: block; }
 
         /* 검색 필터 스타일 */
         .search-filter { border: 1px solid #eee; }
@@ -149,12 +163,18 @@
             </div>
 
             <p style="font-size: 0.85rem; color:#666; margin-bottom:15px;">
-                가로로 스크롤하여 미래의 날짜를 확인할 수 있습니다. 달력 아이콘을 눌러 특정 날짜로 이동하세요.<br>
+                화살표를 눌러 이전/다음 날짜를 계속 확인할 수 있습니다.
             </p>
             
-            <div class="date-container-wrapper">
-                <div class="date-container" id="date-slider">
-                    </div>
+            <div class="slider-wrapper">
+                <button class="nav-arrow" id="btn-prev"><i class="fa-solid fa-chevron-left"></i></button>
+                
+                <div class="date-view-window">
+                    <div class="date-container" id="date-track">
+                        </div>
+                </div>
+
+                <button class="nav-arrow" id="btn-next"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
@@ -272,102 +292,106 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const dateSlider = document.getElementById('date-slider');
+            const dateTrack = document.getElementById('date-track');
             const datePickerInput = document.getElementById('date-picker-input');
             const btnToday = document.getElementById('btn-today');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
             const periodText = document.getElementById('selected-period-text');
 
-            let currentStartDate = new Date(); // 기본 시작일은 오늘
-            let selectedDateStr = formatDate(currentStartDate); // 현재 선택된 날짜
+            // 상태 변수
+            let centerDate = new Date(); // 화면 중앙에 표시될 날짜
+            let selectedDateStr = formatDate(centerDate); // 현재 선택(Active)된 날짜
 
-            // 1. 초기 렌더링 (오늘 기준)
-            renderDateBoxes(currentStartDate);
+            // 1. 초기 렌더링
+            renderWeek(centerDate);
 
-            // 2. '오늘' 버튼 클릭 이벤트
+            // 2. 이벤트 리스너: 오늘 버튼
             btnToday.addEventListener('click', function() {
                 const today = new Date();
-                currentStartDate = today;
-                selectedDateStr = formatDate(today);
-                
-                renderDateBoxes(today);
-                
-                // 스크롤 맨 앞으로 이동
-                dateSlider.scrollLeft = 0;
+                centerDate = new Date(today); // 중앙을 오늘로
+                selectedDateStr = formatDate(today); // 선택도 오늘로
+                renderWeek(centerDate);
             });
 
-            // 3. 달력(DatePicker) 변경 이벤트
+            // 3. 이벤트 리스너: 달력 선택
             datePickerInput.addEventListener('change', function(e) {
                 if(e.target.value) {
                     const pickedDate = new Date(e.target.value);
-                    currentStartDate = pickedDate;
-                    selectedDateStr = formatDate(pickedDate); // 선택한 날짜를 활성화
-                    
-                    renderDateBoxes(pickedDate);
-                    
-                    // 스크롤 맨 앞으로 이동
-                    dateSlider.scrollLeft = 0;
+                    centerDate = new Date(pickedDate); // 중앙을 선택일로
+                    selectedDateStr = formatDate(pickedDate); // 선택도 선택일로
+                    renderWeek(centerDate);
                 }
             });
 
-            // 날짜 박스 렌더링 함수 (startFromDate 부터 30일치 생성)
-            function renderDateBoxes(startFromDate) {
-                dateSlider.innerHTML = ''; // 기존 내용 비우기
-                
+            // 4. 이벤트 리스너: 좌우 화살표 (하루씩 이동)
+            btnPrev.addEventListener('click', function() {
+                centerDate.setDate(centerDate.getDate() - 1);
+                renderWeek(centerDate);
+            });
+
+            btnNext.addEventListener('click', function() {
+                centerDate.setDate(centerDate.getDate() + 1);
+                renderWeek(centerDate);
+            });
+
+            // 핵심 함수: centerDate를 기준으로 앞뒤 3일씩 총 7일을 렌더링
+            function renderWeek(pivotDate) {
+                dateTrack.innerHTML = ''; // 초기화
+
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-                const todayStr = formatDate(new Date()); // 실제 오늘 날짜 문자열
-                
-                // 30일치 박스 생성 (스크롤 가능하게 하기 위함)
-                for (let i = 0; i < 30; i++) {
-                    const tempDate = new Date(startFromDate);
-                    tempDate.setDate(tempDate.getDate() + i); // i일 만큼 더함
+                const todayStr = formatDate(new Date());
+
+                // 기준일(중앙)로부터 -3일부터 +3일까지 루프 (총 7개)
+                for (let i = -3; i <= 3; i++) {
+                    const tempDate = new Date(pivotDate);
+                    tempDate.setDate(tempDate.getDate() + i);
 
                     const yyyy = tempDate.getFullYear();
                     const mm = String(tempDate.getMonth() + 1).padStart(2, '0');
                     const dd = String(tempDate.getDate()).padStart(2, '0');
                     const dayName = dayNames[tempDate.getDay()];
-                    const dateString = `${yyyy}.${mm}.${dd}`; // 표시용
-                    const fullDateStr = `${yyyy}-${mm}-${dd}`; // 비교용
                     
-                    // HTML 구조 생성
+                    const dateString = `${yyyy}.${mm}.${dd}`; // 화면 표시용
+                    const fullDateStr = `${yyyy}-${mm}-${dd}`; // 데이터 비교용 (formatDate함수 결과와 동일)
+
                     const box = document.createElement('div');
                     box.className = 'date-box';
-                    
-                    // 오늘인지 체크
-                    const isToday = (formatDate(tempDate) === todayStr);
-                    if (isToday) box.classList.add('is-today');
 
-                    // 선택된 날짜인지 체크 (기본적으로 시작일을 활성화하거나, 사용자가 클릭하면 바뀜)
-                    if (formatDate(tempDate) === selectedDateStr) {
-                        box.classList.add('active');
-                        updatePeriodText(dateString, dayName); // 하단 텍스트 업데이트
+                    // 오늘 뱃지
+                    if (fullDateStr === todayStr) {
+                        box.classList.add('is-today');
                     }
 
-                    // 클릭 이벤트 추가 (활성화 상태 변경)
-                    box.addEventListener('click', function() {
-                        // 모든 박스 active 제거
-                        document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
-                        // 현재 박스 active 추가
-                        this.classList.add('active');
-                        selectedDateStr = formatDate(tempDate);
+                    // 선택된 날짜 활성화 (배경색 변경)
+                    if (fullDateStr === selectedDateStr) {
+                        box.classList.add('active');
                         updatePeriodText(dateString, dayName);
+                    }
+
+                    // 박스 클릭 시 이벤트
+                    box.addEventListener('click', function() {
+                        // 선택 상태 변경
+                        selectedDateStr = fullDateStr;
+                        // 중앙 날짜는 변경하지 않고 선택 효과만 갱신 (원하면 중앙으로 오게 할 수도 있음)
+                        renderWeek(centerDate); 
                     });
 
-                    // 내용 구성 (숙박 수는 임시 랜덤값 혹은 0)
-                    // 데모용으로 오늘이나 근처 날짜에만 숫자를 넣어봄
-                    let countNum = Math.floor(Math.random() * 5); 
-                    if (i > 14) countNum = 0; // 먼 미래는 0으로 가정
+                    // 임시 데이터 (숙박 수)
+                    let countNum = Math.floor(Math.random() * 5);
+                    // 중앙 기준 너무 멀면 0으로 (데모용)
+                    if (Math.abs(new Date() - tempDate) > 1000 * 60 * 60 * 24 * 30) countNum = 0; 
 
                     box.innerHTML = `
                         <div class="today-badge">오늘</div>
                         <div class="date-text">${dateString} (${dayName})</div>
                         <div class="count">숙박 ${countNum}</div>
                     `;
-                    
-                    dateSlider.appendChild(box);
+                    dateTrack.appendChild(box);
                 }
             }
 
-            // 날짜 포맷 헬퍼 (YYYY-MM-DD)
+            // 날짜 포맷 (YYYY-MM-DD)
             function formatDate(date) {
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -375,7 +399,7 @@
                 return `${yyyy}-${mm}-${dd}`;
             }
 
-            // 하단 기간 설정 텍스트 업데이트
+            // 하단 기간 텍스트 업데이트
             function updatePeriodText(dateStr, dayName) {
                 periodText.innerText = `입실일 ${dateStr} (${dayName}) ~ ${dateStr} (${dayName})`;
             }
