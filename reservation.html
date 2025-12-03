@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Insta 파트너센터 - 예약 관리</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* 기본 스타일 초기화 */
@@ -59,22 +60,21 @@
 
         /* 좌우 화살표 버튼 */
         .nav-arrow {
-            width: 40px; height: 80px; /* 버튼 크기 */
+            width: 40px; height: 80px; 
             border: 1px solid #eee; background-color: #fff;
             border-radius: 4px; cursor: pointer;
             color: #888; font-size: 1.2rem;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
-            margin-top: 10px; /* 박스 높이에 맞춰 중앙 정렬 보정 */
+            margin-top: 10px; 
         }
         .nav-arrow:hover { background-color: #f9f9f9; color: #ff6900; border-color: #ff6900; }
 
-        /* [수정] 날짜 박스 컨테이너 (7개 고정 노출) */
+        /* 날짜 박스 컨테이너 */
         .date-view-window {
             flex-grow: 1;
-            overflow: hidden; /* 넘치는 것 숨김 */
-            /* [중요] 뱃지가 위로 튀어나올 공간 확보 */
-            padding-top: 25px; 
+            overflow: hidden; 
+            padding-top: 25px; /* 뱃지 공간 확보 */
             padding-bottom: 5px;
         }
         .date-container { 
@@ -84,11 +84,11 @@
         }
 
         .date-box { 
-            flex: 1; /* 부모 너비에 맞춰 7등분 */
+            flex: 1; 
             border: 1px solid #ddd; border-radius: 4px; padding: 15px 0; 
             text-align: center; cursor: pointer; position: relative; background: white;
             transition: border-color 0.2s, background-color 0.2s;
-            min-width: 0; /* flex box 축소 방지 */
+            min-width: 0; 
         }
         .date-box:hover { border-color: #ff6900; }
         .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; }
@@ -96,11 +96,10 @@
         .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #333; white-space: nowrap; }
         .count { font-size: 0.9rem; color: #ff6900; font-weight: bold; white-space: nowrap; }
         
-        /* [수정] 오늘 뱃지 스타일 */
+        /* 오늘 뱃지 스타일 (박스 위로 올림) */
         .today-badge { 
             position: absolute; 
-            /* 테두리와 겹치지 않게 위로 이동 (-10px -> -24px) */
-            top: -24px; 
+            top: -24px; /* 테두리 위로 */
             left: 50%; 
             transform: translateX(-50%); 
             background-color: #ff6900; 
@@ -110,12 +109,12 @@
             border-radius: 12px; 
             display: none; 
             white-space: nowrap;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 약간의 그림자 추가 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
             font-weight: bold;
         }
         .date-box.is-today .today-badge { display: block; }
 
-        /* 검색 필터 스타일 */
+        /* 검색 필터 및 테이블 스타일 */
         .search-filter { border: 1px solid #eee; }
         .filter-summary { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 4px; }
         .status-tabs button { padding: 8px 16px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 0.9rem; margin-right: -1px; }
@@ -123,14 +122,12 @@
         .status-tabs button:first-child { border-radius: 4px 0 0 4px; }
         .status-tabs button:last-child { border-radius: 0 4px 4px 0; }
 
-        /* 테이블 스타일 */
         .table-controls { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
         .summary-text { font-size: 0.9rem; font-weight: bold; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; border-top: 2px solid #ddd; }
         .data-table th { background-color: #f5f5f5; padding: 12px; text-align: center; border-bottom: 1px solid #ddd; font-weight: bold; color: #555; }
         .data-table td { padding: 15px 12px; border-bottom: 1px solid #eee; vertical-align: middle; text-align: center; }
 
-        /* 테이블 내부 요소 */
         .room-type { font-weight: bold; display: block; }
         .stay-info { font-size: 0.8rem; color: #ff6900; }
         .price-original { text-decoration: line-through; color: #999; font-size: 0.8rem; display: block;}
@@ -143,7 +140,6 @@
         .fa-instagram { color: #E1306C !important; }
         .fa-tiktok { color: #000000 !important; }
         .fa-envelope { color: #ff6900 !important; }
-
     </style>
 </head>
 <body>
@@ -203,7 +199,7 @@
                 <p style="font-size:0.9rem; color:#555;" id="selected-period-text">입실일 2025.12.02 (화) ~ 2025.12.02 (화)</p>
             </div>
 
-            <div class="filter-summary">
+             <div class="filter-summary">
                 <div class="status-tabs">
                     <button class="active">입실 상태 전체</button>
                     <button>입실 전만 보기</button>
@@ -263,35 +259,6 @@
                                 </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td><div class="request-text">전망 좋은 방 주세요.</div></td>
-                            <td><strong>유완규</strong></td>
-                            <td>
-                                <span class="room-type">럭셔리</span>
-                                <span class="stay-info">숙박 / 1박</span>
-                            </td>
-                            <td>
-                                2025.12.02(화) 10:30<br>
-                                2025.12.02(화) 14:30
-                            </td>
-                            <td>
-                                2025.12.02(화)<br>
-                                <span style="font-size:0.8rem; color:#888;">당일건</span>
-                            </td>
-                            <td>예약완료</td>
-                            <td>
-                                <span class="price-original">판매가 30,000원</span>
-                                <span class="price-final">입금예정가 27,000원</span>
-                            </td>
-                            <td><input type="checkbox"> 입실완료</td>
-                            <td>
-                                <div class="sns-info">
-                                    <div class="sns-item"><i class="fa-solid fa-envelope"></i> user2@gmail.com</div>
-                                    <div class="sns-item"><i class="fa-brands fa-instagram"></i> @yu_daily</div>
-                                    <div class="sns-item"><i class="fa-brands fa-tiktok"></i> -</div>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -305,6 +272,13 @@
     </main>
 
     <script>
+        // ▼▼▼ 여기에 복사한 키를 붙여넣으세요 ▼▼▼
+        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenlkhns.supabase.co'; //
+        const YOUR_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'; //
+        // ▲▲▲▲▲▲
+
+        const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
+
         document.addEventListener('DOMContentLoaded', function() {
             const dateTrack = document.getElementById('date-track');
             const datePickerInput = document.getElementById('date-picker-input');
@@ -314,31 +288,29 @@
             const periodText = document.getElementById('selected-period-text');
 
             // 상태 변수
-            let centerDate = new Date(); // 화면 중앙에 표시될 날짜
-            let selectedDateStr = formatDate(centerDate); // 현재 선택(Active)된 날짜
+            let centerDate = new Date(); // 화면 중앙 날짜
+            let selectedDateStr = formatDate(centerDate); // 선택된 날짜
 
             // 1. 초기 렌더링
             renderWeek(centerDate);
 
-            // 2. 이벤트 리스너: 오늘 버튼
+            // 2. 이벤트 리스너들
             btnToday.addEventListener('click', function() {
                 const today = new Date();
-                centerDate = new Date(today); // 중앙을 오늘로
-                selectedDateStr = formatDate(today); // 선택도 오늘로
+                centerDate = new Date(today);
+                selectedDateStr = formatDate(today);
                 renderWeek(centerDate);
             });
 
-            // 3. 이벤트 리스너: 달력 선택
             datePickerInput.addEventListener('change', function(e) {
                 if(e.target.value) {
                     const pickedDate = new Date(e.target.value);
-                    centerDate = new Date(pickedDate); // 중앙을 선택일로
-                    selectedDateStr = formatDate(pickedDate); // 선택도 선택일로
+                    centerDate = new Date(pickedDate);
+                    selectedDateStr = formatDate(pickedDate);
                     renderWeek(centerDate);
                 }
             });
 
-            // 4. 이벤트 리스너: 좌우 화살표 (하루씩 이동)
             btnPrev.addEventListener('click', function() {
                 centerDate.setDate(centerDate.getDate() - 1);
                 renderWeek(centerDate);
@@ -349,52 +321,73 @@
                 renderWeek(centerDate);
             });
 
-            // 핵심 함수: centerDate를 기준으로 앞뒤 3일씩 총 7일을 렌더링
-            function renderWeek(pivotDate) {
-                dateTrack.innerHTML = ''; // 초기화
+            // 날짜 박스 렌더링 및 데이터 가져오기 함수
+            async function renderWeek(pivotDate) {
+                dateTrack.innerHTML = ''; 
 
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
                 const todayStr = formatDate(new Date());
 
-                // 기준일(중앙)로부터 -3일부터 +3일까지 루프 (총 7개)
+                // 1. 이번에 보여줄 7일간의 날짜 배열 생성
+                const datesToShow = [];
+                // 기준일(중앙) -3일 ~ +3일
                 for (let i = -3; i <= 3; i++) {
                     const tempDate = new Date(pivotDate);
                     tempDate.setDate(tempDate.getDate() + i);
+                    datesToShow.push(tempDate);
+                }
 
-                    const yyyy = tempDate.getFullYear();
-                    const mm = String(tempDate.getMonth() + 1).padStart(2, '0');
-                    const dd = String(tempDate.getDate()).padStart(2, '0');
-                    const dayName = dayNames[tempDate.getDay()];
+                // 2. 이 7일 기간에 해당하는 예약 데이터를 Supabase에서 한 번에 가져오기
+                // 범위의 시작일과 끝일 계산
+                const startDateStr = formatDate(datesToShow[0]);
+                const endDateStr = formatDate(datesToShow[datesToShow.length - 1]);
+
+                // bookings 테이블의 check_in 컬럼 조회
+                const { data: bookings, error } = await supabase
+                    .from('bookings')
+                    .select('check_in') 
+                    .gte('check_in', startDateStr)
+                    .lte('check_in', endDateStr);
+
+                if (error) {
+                    console.error('데이터 가져오기 실패:', error);
+                }
+
+                // 3. 날짜별 예약 건수 카운트
+                const counts = {};
+                if (bookings) {
+                    bookings.forEach(booking => {
+                        const dateKey = booking.check_in;
+                        counts[dateKey] = (counts[dateKey] || 0) + 1;
+                    });
+                }
+
+                // 4. UI 그리기
+                datesToShow.forEach(dateObj => {
+                    const yyyy = dateObj.getFullYear();
+                    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const dd = String(dateObj.getDate()).padStart(2, '0');
+                    const dayName = dayNames[dateObj.getDay()];
                     
-                    const dateString = `${yyyy}.${mm}.${dd}`; // 화면 표시용
-                    const fullDateStr = `${yyyy}-${mm}-${dd}`; // 데이터 비교용 (formatDate함수 결과와 동일)
+                    const dateString = `${yyyy}.${mm}.${dd}`; 
+                    const fullDateStr = `${yyyy}-${mm}-${dd}`;
 
                     const box = document.createElement('div');
                     box.className = 'date-box';
 
-                    // 오늘 뱃지
-                    if (fullDateStr === todayStr) {
-                        box.classList.add('is-today');
-                    }
-
-                    // 선택된 날짜 활성화 (배경색 변경)
+                    if (fullDateStr === todayStr) box.classList.add('is-today');
                     if (fullDateStr === selectedDateStr) {
                         box.classList.add('active');
                         updatePeriodText(dateString, dayName);
                     }
 
-                    // 박스 클릭 시 이벤트
                     box.addEventListener('click', function() {
-                        // 선택 상태 변경
                         selectedDateStr = fullDateStr;
-                        // 중앙 날짜는 변경하지 않고 선택 효과만 갱신 (원하면 중앙으로 오게 할 수도 있음)
                         renderWeek(centerDate); 
                     });
 
-                    // 임시 데이터 (숙박 수)
-                    let countNum = Math.floor(Math.random() * 5);
-                    // 중앙 기준 너무 멀면 0으로 (데모용)
-                    if (Math.abs(new Date() - tempDate) > 1000 * 60 * 60 * 24 * 30) countNum = 0; 
+                    // 실제 카운트 적용
+                    let countNum = counts[fullDateStr] || 0;
 
                     box.innerHTML = `
                         <div class="today-badge">오늘</div>
@@ -402,10 +395,9 @@
                         <div class="count">숙박 ${countNum}</div>
                     `;
                     dateTrack.appendChild(box);
-                }
+                });
             }
 
-            // 날짜 포맷 (YYYY-MM-DD)
             function formatDate(date) {
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -413,7 +405,6 @@
                 return `${yyyy}-${mm}-${dd}`;
             }
 
-            // 하단 기간 텍스트 업데이트
             function updatePeriodText(dateStr, dayName) {
                 periodText.innerText = `입실일 ${dateStr} (${dayName}) ~ ${dateStr} (${dayName})`;
             }
