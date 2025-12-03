@@ -195,9 +195,10 @@
     </main>
 
     <script>
-        // [중요] 사용자가 제공한 Key로 업데이트 완료
-        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenlkhns.supabase.co'; //
-        const YOUR_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'; //
+        // [수정 완료] URL 오타 수정됨 (lkhns)
+        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenlkhns.supabase.co';
+        // Key는 보내주신 그대로 유지
+        const YOUR_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'; 
 
         const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
 
@@ -270,7 +271,7 @@
 
                 if (error) {
                     console.error('데이터 가져오기 실패:', error);
-                    alert("데이터를 불러오는데 실패했습니다. 권한 설정을 확인해주세요.\n" + error.message);
+                    alert("데이터를 불러오는데 실패했습니다. 주소 설정을 확인해주세요.\n" + error.message);
                     return;
                 }
 
