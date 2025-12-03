@@ -78,6 +78,9 @@
         .fa-instagram { color: #E1306C !important; }
         .fa-tiktok { color: #000000 !important; }
         .fa-envelope { color: #ff6900 !important; }
+
+        /* 로딩 애니메이션 */
+        .loading-spinner { text-align: center; padding: 20px; color: #888; }
     </style>
 </head>
 <body>
@@ -147,7 +150,7 @@
 
             <div style="margin-top:20px;">
                 <div class="table-controls">
-                    <span class="summary-text">리스트 예시 (DB 연동은 상단 캘린더 숫자 확인)</span>
+                    <span class="summary-text" id="table-summary">조회 결과가 없습니다.</span>
                     <select style="padding:4px;">
                         <option>입실일 내림차순</option>
                     </select>
@@ -156,20 +159,20 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>요청사항</th>
-                            <th>예약자 정보</th>
-                            <th>객실 타입</th>
-                            <th>입실/퇴실일시</th>
-                            <th>예약일시</th>
-                            <th>예약상태</th>
-                            <th>금액 및 할인정보</th>
-                            <th>입실 상태</th>
-                            <th>입실 정보 (연락처)</th>
+                            <th style="width: 15%;">요청사항</th>
+                            <th style="width: 10%;">예약자 정보</th>
+                            <th style="width: 10%;">객실 타입</th>
+                            <th style="width: 15%;">입실/퇴실일시</th>
+                            <th style="width: 10%;">예약일시</th>
+                            <th style="width: 8%;">예약상태</th>
+                            <th style="width: 15%;">금액 및 할인정보</th>
+                            <th style="width: 8%;">입실 상태</th>
+                            <th style="width: 15%;">입실 정보 (연락처)</th>
                         </tr>
                     </thead>
                     <tbody id="reservation-list">
-                        <tr>
-                            <td colspan="9" style="padding: 20px;">캘린더 날짜를 클릭하면 해당 날짜 예약이 여기에 표시되도록 구현할 예정입니다.</td>
+                         <tr>
+                            <td colspan="9" style="padding: 20px;">데이터를 불러오는 중입니다...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -184,11 +187,8 @@
     </main>
 
     <script>
-        // ▼▼▼ 수정된 부분 (URL 오타 수정됨) ▼▼▼
-        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenklhns.supabase.co'; // nklhns로 수정됨
+        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenklhns.supabase.co'; 
         const YOUR_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'; 
-        // ▲▲▲▲▲▲
-
         const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -198,13 +198,16 @@
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
             const periodText = document.getElementById('selected-period-text');
+            const reservationList = document.getElementById('reservation-list'); // 테이블 바디
+            const tableSummary = document.getElementById('table-summary'); // 테이블 위 요약 텍스트
 
             // 상태 변수
-            let centerDate = new Date(); // 화면 중앙 날짜
-            let selectedDateStr = formatDate(centerDate); // 선택된 날짜
+            let centerDate = new Date(); 
+            let selectedDateStr = formatDate(centerDate); 
 
-            // 1. 초기 렌더링
+            // 1. 초기 실행
             renderWeek(centerDate);
+            renderReservationTable(selectedDateStr); // 초기 날짜 데이터 로드
 
             // 2. 이벤트 리스너들
             btnToday.addEventListener('click', function() {
@@ -212,6 +215,7 @@
                 centerDate = new Date(today);
                 selectedDateStr = formatDate(today);
                 renderWeek(centerDate);
+                renderReservationTable(selectedDateStr);
             });
 
             datePickerInput.addEventListener('change', function(e) {
@@ -220,6 +224,7 @@
                     centerDate = new Date(pickedDate);
                     selectedDateStr = formatDate(pickedDate);
                     renderWeek(centerDate);
+                    renderReservationTable(selectedDateStr);
                 }
             });
 
@@ -233,14 +238,12 @@
                 renderWeek(centerDate);
             });
 
-            // 날짜 박스 렌더링 및 데이터 가져오기 함수
+            // --- [핵심 기능 1] 캘린더 그리기 (기존과 동일) ---
             async function renderWeek(pivotDate) {
                 dateTrack.innerHTML = ''; 
-
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
                 const todayStr = formatDate(new Date());
 
-                // 1. 이번에 보여줄 7일간의 날짜 배열 생성 (기준일 -3일 ~ +3일)
                 const datesToShow = [];
                 for (let i = -3; i <= 3; i++) {
                     const tempDate = new Date(pivotDate);
@@ -248,40 +251,29 @@
                     datesToShow.push(tempDate);
                 }
 
-                // 2. 데이터 가져오기 (범위 조회)
                 const startDateStr = formatDate(datesToShow[0]);
                 const endDateStr = formatDate(datesToShow[datesToShow.length - 1]);
 
-                // Supabase bookings 테이블 조회 (테이블 이름이 bookings 인지 확인 필요)
-                // gte, lte는 문자열 비교를 하므로 '2025-12-03' 형식으로 조회
+                // 예약 카운트 조회
                 const { data: bookings, error } = await supabase
                     .from('bookings')
                     .select('check_in') 
-                    .gte('check_in', startDateStr + ' 00:00:00') // 시간 범위 고려 (시작일 0시)
-                    .lte('check_in', endDateStr + ' 23:59:59'); // 시간 범위 고려 (종료일 24시)
+                    .gte('check_in', startDateStr + ' 00:00:00')
+                    .lte('check_in', endDateStr + ' 23:59:59');
 
-                if (error) {
-                    console.error('데이터 가져오기 실패:', error);
-                    // 에러 시 사용자에게 알림은 주지 않고 콘솔에만 표시
-                }
-
-                // 3. 날짜별 예약 건수 카운트
                 const counts = {};
                 if (bookings) {
                     bookings.forEach(booking => {
-                        // DB에 '2025-12-03 15:00:00' 처럼 저장되어 있을 수 있으므로 앞 10자리만 자름
                         const dateKey = booking.check_in.substring(0, 10);
                         counts[dateKey] = (counts[dateKey] || 0) + 1;
                     });
                 }
 
-                // 4. UI 그리기
                 datesToShow.forEach(dateObj => {
                     const yyyy = dateObj.getFullYear();
                     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
                     const dd = String(dateObj.getDate()).padStart(2, '0');
                     const dayName = dayNames[dateObj.getDay()];
-                    
                     const dateString = `${yyyy}.${mm}.${dd}`; 
                     const fullDateStr = `${yyyy}-${mm}-${dd}`;
 
@@ -295,14 +287,13 @@
                     }
 
                     box.addEventListener('click', function() {
+                        // 클릭 시 선택 날짜 변경
                         selectedDateStr = fullDateStr;
-                        renderWeek(centerDate); 
-                        // TODO: 여기서 하단 테이블 리스트 갱신 함수 호출 필요
+                        renderWeek(centerDate); // 캘린더 다시 그림 (선택 효과 이동)
+                        renderReservationTable(selectedDateStr); // ★테이블 데이터 갱신 호출
                     });
 
-                    // 실제 카운트 적용
                     let countNum = counts[fullDateStr] || 0;
-
                     box.innerHTML = `
                         <div class="today-badge">오늘</div>
                         <div class="date-text">${dateString} (${dayName})</div>
@@ -312,11 +303,109 @@
                 });
             }
 
-            function formatDate(date) {
+            // --- [핵심 기능 2] 하단 테이블 리스트 불러오기 (새로 추가됨) ---
+            async function renderReservationTable(dateStr) {
+                // 1. 로딩 표시
+                reservationList.innerHTML = '<tr><td colspan="9" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 데이터를 불러오는 중...</td></tr>';
+
+                // 2. Supabase 데이터 조회 (해당 날짜의 예약 전체)
+                const { data: bookings, error } = await supabase
+                    .from('bookings')
+                    .select('*') // 모든 컬럼 가져오기
+                    .gte('check_in', dateStr + ' 00:00:00') // 시작 시간
+                    .lte('check_in', dateStr + ' 23:59:59') // 종료 시간
+                    .order('created_at', { ascending: false }); // 최신 예약순
+
+                if (error) {
+                    console.error("테이블 조회 에러:", error);
+                    reservationList.innerHTML = '<tr><td colspan="9">데이터를 불러오는데 실패했습니다.</td></tr>';
+                    return;
+                }
+
+                // 3. 데이터가 없을 경우
+                if (!bookings || bookings.length === 0) {
+                    reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">해당 날짜에 예약 내역이 없습니다.</td></tr>';
+                    tableSummary.innerText = `총 0개 | 매출액 0원`;
+                    return;
+                }
+
+                // 4. 데이터가 있을 경우 테이블 행 생성
+                let html = '';
+                let totalAmount = 0; // 총 매출 계산용
+
+                bookings.forEach(booking => {
+                    // 금액 합계 계산
+                    const price = booking.total_price || 0;
+                    totalAmount += price;
+
+                    // 상태 한글 변환
+                    let statusBadge = booking.status;
+                    if(statusBadge === 'confirmed') statusBadge = '<span style="color:#2ecc71; font-weight:bold;">예약확정</span>';
+                    else statusBadge = '<span style="color:#95a5a6;">' + statusBadge + '</span>';
+
+                    // 날짜 포맷팅 (YYYY.MM.DD HH:mm)
+                    const checkInDate = new Date(booking.check_in);
+                    const checkOutDate = new Date(booking.check_out);
+                    const createdDate = new Date(booking.created_at);
+
+                    // HTML 조립
+                    html += `
+                        <tr>
+                            <td><div class="request-text">${booking.guest_request || '-'}</div></td>
+                            <td><strong>${booking.guest_name}</strong></td>
+                            <td>
+                                <span class="room-type">객실 ${booking.room_id}</span>
+                                <span class="stay-info">숙박 / 1박</span>
+                            </td>
+                            <td>
+                                ${formatDateDot(checkInDate)} 15:00<br>
+                                ${formatDateDot(checkOutDate)} 11:00
+                            </td>
+                            <td>
+                                ${formatDateDot(createdDate)}<br>
+                                <span style="font-size:0.8rem; color:#888;">${formatTime(createdDate)}</span>
+                            </td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <span class="price-original">판매가 ${Number(booking.room_price).toLocaleString()}원</span>
+                                <span class="price-final">결제금액 ${Number(booking.total_price).toLocaleString()}원</span>
+                            </td>
+                            <td><input type="checkbox" checked> 입실완료</td>
+                            <td>
+                                <div class="sns-info">
+                                    <div class="sns-item"><i class="fa-solid fa-phone"></i> ${booking.phone || '-'}</div>
+                                    <div class="sns-item"><i class="fa-solid fa-envelope"></i> ${booking.guest_email || '-'}</div>
+                                    <div class="sns-item"><i class="fa-brands fa-instagram"></i> ${booking.social_insta || '-'}</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                reservationList.innerHTML = html;
+                tableSummary.innerText = `총 ${bookings.length}개 | 매출액 ${totalAmount.toLocaleString()}원`;
+            }
+
+            // --- 유틸리티 함수들 ---
+            function formatDate(date) { // YYYY-MM-DD
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
                 const dd = String(date.getDate()).padStart(2, '0');
                 return `${yyyy}-${mm}-${dd}`;
+            }
+
+            function formatDateDot(date) { // YYYY.MM.DD(요일)
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const dayName = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+                return `${yyyy}.${mm}.${dd}(${dayName})`;
+            }
+
+            function formatTime(date) { // HH:mm
+                const hh = String(date.getHours()).padStart(2, '0');
+                const mm = String(date.getMinutes()).padStart(2, '0');
+                return `${hh}:${mm}`;
             }
 
             function updatePeriodText(dateStr, dayName) {
