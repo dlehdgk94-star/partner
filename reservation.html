@@ -7,10 +7,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 스타일은 기존과 동일 */
+        /* 기본 스타일 초기화 */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f5f7fa; color: #333; display: flex; min-height: 100vh; }
 
+        /* 사이드바 */
         .sidebar { width: 240px; background-color: #ff6900; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
         .menu-list { list-style: none; margin-top: 10px; }
@@ -18,42 +19,63 @@
         .menu-item:hover { background-color: #e65c00; }
         .menu-item.active { background-color: #cc5200; font-weight: bold; }
 
+        /* 메인 콘텐츠 */
         .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
         .page-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; color: #333; }
         .page-desc { font-size: 0.9rem; color: #666; margin-bottom: 30px; }
 
         .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
+        /* 캘린더 관련 스타일 */
         .weekly-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .weekly-title { font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        
         .date-controls { display: flex; align-items: center; gap: 10px; }
         .btn-today { background-color: #fff; border: 1px solid #ccc; padding: 5px 12px; border-radius: 4px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
         .btn-today:hover { background-color: #f0f0f0; border-color: #bbb; }
-        
         .calendar-picker-wrapper { position: relative; display: flex; align-items: center; }
         .calendar-icon-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #555; padding: 5px; transition: color 0.2s; }
-        .calendar-icon-btn:hover { color: #ff6900; }
         #date-picker-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-
         .slider-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 15px; background-color: #fff; }
         .nav-arrow { width: 40px; height: 80px; border: 1px solid #eee; background-color: #fff; border-radius: 4px; cursor: pointer; color: #888; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-top: 10px; }
         .nav-arrow:hover { background-color: #f9f9f9; color: #ff6900; border-color: #ff6900; }
-
         .date-view-window { flex-grow: 1; overflow: hidden; padding-top: 25px; padding-bottom: 5px; }
         .date-container { display: flex; gap: 10px; width: 100%; }
-
         .date-box { flex: 1; border: 1px solid #ddd; border-radius: 4px; padding: 15px 0; text-align: center; cursor: pointer; position: relative; background: white; transition: border-color 0.2s, background-color 0.2s; min-width: 0; }
         .date-box:hover { border-color: #ff6900; }
         .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; }
-        
         .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #333; white-space: nowrap; }
         .count { font-size: 0.9rem; color: #ff6900; font-weight: bold; white-space: nowrap; }
-        
         .today-badge { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); background-color: #ff6900; color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; display: none; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: bold; }
         .date-box.is-today .today-badge { display: block; }
 
-        .search-filter { border: 1px solid #eee; }
+        /* ▼▼▼ [새로 추가] 상세 검색 필터 스타일 ▼▼▼ */
+        .search-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; cursor: pointer; }
+        .search-toggle-btn { border: none; background: none; cursor: pointer; font-size: 0.9rem; color: #555; }
+        
+        .filter-content { display: block; /* 기본 열림 */ border-top: 1px solid #eee; padding-top: 20px; }
+        .filter-row { display: flex; align-items: center; margin-bottom: 15px; font-size: 0.9rem; }
+        .filter-label { width: 100px; font-weight: bold; color: #333; flex-shrink: 0; }
+        .filter-input-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-grow: 1; }
+        
+        .form-select, .form-input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
+        .form-input-date { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; width: 130px; }
+        
+        .btn-group { display: flex; }
+        .btn-group button { background: white; border: 1px solid #ccc; padding: 6px 12px; font-size: 0.85rem; cursor: pointer; border-right: none; }
+        .btn-group button:first-child { border-radius: 4px 0 0 4px; }
+        .btn-group button:last-child { border-radius: 0 4px 4px 0; border-right: 1px solid #ccc; }
+        .btn-group button:hover { background-color: #f5f5f5; }
+        .btn-group button.selected { background-color: #333; color: white; border-color: #333; }
+
+        .radio-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; margin-right: 15px; }
+        .radio-group input[type="radio"] { accent-color: #00c7ae; } /* 민트색 포인트 */
+
+        .search-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+        .btn-reset { background: white; border: 1px solid #ccc; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        .btn-search { background: #1f3a60; color: white; border: 1px solid #1f3a60; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-search:hover { background: #152b4a; }
+        /* ▲▲▲ 상세 검색 스타일 끝 ▲▲▲ */
+
         .filter-summary { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 4px; }
         .status-tabs button { padding: 8px 16px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 0.9rem; margin-right: -1px; }
         .status-tabs button.active { background-color: #ff6900; color: white; border-color: #ff6900; }
@@ -80,22 +102,8 @@
         .fa-envelope { color: #ff6900 !important; }
 
         /* 옵션 표시 스타일 */
-        .option-badge { 
-            display: inline-block; 
-            background: #fff0e6; 
-            color: #ff6900; 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-size: 0.8rem; 
-            margin-bottom: 4px;
-            font-weight: bold;
-            border: 1px solid #ffccb0;
-            text-align: left;
-            width: 100%;
-        }
+        .option-badge { display: inline-block; background: #fff0e6; color: #ff6900; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 4px; font-weight: bold; border: 1px solid #ffccb0; text-align: left; width: 100%; }
         .option-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-
-        /* 로딩 애니메이션 */
         .loading-spinner { text-align: center; padding: 20px; color: #888; }
     </style>
 </head>
@@ -128,32 +136,79 @@
                     </div>
                 </div>
             </div>
-
-            <p style="font-size: 0.85rem; color:#666; margin-bottom:15px;">
-                화살표를 눌러 이전/다음 날짜를 계속 확인할 수 있습니다.
-            </p>
-            
+            <p style="font-size: 0.85rem; color:#666; margin-bottom:15px;">화살표를 눌러 이전/다음 날짜를 계속 확인할 수 있습니다.</p>
             <div class="slider-wrapper">
                 <button class="nav-arrow" id="btn-prev"><i class="fa-solid fa-chevron-left"></i></button>
-                
                 <div class="date-view-window">
-                    <div class="date-container" id="date-track">
-                        </div>
+                    <div class="date-container" id="date-track"></div>
                 </div>
-
                 <button class="nav-arrow" id="btn-next"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
         <div class="card search-filter">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div class="search-header" onclick="toggleFilter()">
                 <h4><i class="fa-solid fa-magnifying-glass"></i> 예약내역 상세 검색</h4>
-                <button style="border:none; background:none; cursor:pointer;">펼치기 <i class="fa-solid fa-chevron-down"></i></button>
+                <button class="search-toggle-btn" id="toggle-btn-icon">접기 <i class="fa-solid fa-chevron-up"></i></button>
             </div>
             
-            <div class="filter-box" style="border-top:1px solid #eee; padding-top:15px;">
-                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">기간 설정 조건</p>
-                <p style="font-size:0.9rem; color:#555;" id="selected-period-text">날짜를 선택해주세요</p>
+            <p style="font-size:0.85rem; color:#666; margin-bottom:10px;">1주일 간의 입실 현황을 확인하고 싶을 경우 '1주일 간의 입실 현황'을 활용해주세요.<br>조건을 설정한 후 '검색' 버튼을 눌러주세요.</p>
+
+            <div class="filter-content" id="filter-content">
+                <div class="filter-row">
+                    <div class="filter-label">기간</div>
+                    <div class="filter-input-group">
+                        <select class="form-select">
+                            <option>입실일</option>
+                        </select>
+                        <div class="btn-group">
+                            <button onclick="setFilterDate('yesterday')">어제</button>
+                            <button onclick="setFilterDate('today')" class="selected">오늘</button>
+                            <button onclick="setFilterDate('tomorrow')">내일</button>
+                            <button onclick="setFilterDate('next7')">다음 7일</button>
+                        </div>
+                        <span style="font-size:0.8rem; color:#666;">시작일</span>
+                        <input type="date" id="filter-start-date" class="form-input-date">
+                        <span style="font-size:0.8rem; color:#666;">~ 종료일</span>
+                        <input type="date" id="filter-end-date" class="form-input-date">
+                        <label style="font-size:0.9rem; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                            <input type="checkbox" id="same-day-check"> 당일 예약만 보기
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-label">예약상태</div>
+                    <div class="filter-input-group radio-group">
+                        <label><input type="radio" name="status" value="all" checked> <span style="color:#00c7ae; font-weight:bold;">●</span> 전체</label>
+                        <label><input type="radio" name="status" value="confirmed"> 예약완료</label>
+                        <label><input type="radio" name="status" value="cancelled"> 예약취소(고객)</label>
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-label">객실 타입</div>
+                    <div class="filter-input-group">
+                        <select class="form-select" id="room-select" style="width: 200px;">
+                            <option value="all">전체</option>
+                            </select>
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-label">검색어</div>
+                    <div class="filter-input-group">
+                        <select class="form-select">
+                            <option>예약자명</option>
+                        </select>
+                        <input type="text" id="search-keyword" class="form-input" placeholder="예약자명을 입력해주세요." style="width: 300px;">
+                    </div>
+                </div>
+
+                <div class="search-footer">
+                    <button class="btn-reset" onclick="resetFilters()">초기화</button>
+                    <button class="btn-search" id="btn-search-action">검색</button>
+                </div>
             </div>
 
              <div class="filter-summary">
@@ -187,17 +242,9 @@
                         </tr>
                     </thead>
                     <tbody id="reservation-list">
-                         <tr>
-                            <td colspan="9" style="padding: 20px;">데이터를 불러오는 중입니다...</td>
-                        </tr>
+                         <tr><td colspan="9" style="padding: 20px;">검색 조건을 설정하고 검색 버튼을 눌러주세요.</td></tr>
                     </tbody>
                 </table>
-            </div>
-            
-            <div style="text-align:center; margin-top:20px;">
-                <button style="border:1px solid #ddd; background:white; padding:5px 10px;">&lt;</button>
-                <button style="border:1px solid #ff6900; background:white; color:#ff6900; font-weight:bold; padding:5px 10px;">1</button>
-                <button style="border:1px solid #ddd; background:white; padding:5px 10px;">&gt;</button>
             </div>
         </div>
     </main>
@@ -207,66 +254,93 @@
         const YOUR_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'; 
         const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
 
+        // 전역 변수 설정 (필터 상태 관리용)
+        let roomMap = {}; 
+
         document.addEventListener('DOMContentLoaded', async function() {
+            // DOM 요소
             const dateTrack = document.getElementById('date-track');
             const datePickerInput = document.getElementById('date-picker-input');
             const btnToday = document.getElementById('btn-today');
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
-            const periodText = document.getElementById('selected-period-text');
             const reservationList = document.getElementById('reservation-list');
             const tableSummary = document.getElementById('table-summary');
+            
+            // 필터 DOM
+            const filterStartDate = document.getElementById('filter-start-date');
+            const filterEndDate = document.getElementById('filter-end-date');
+            const roomSelect = document.getElementById('room-select');
+            const searchKeyword = document.getElementById('search-keyword');
+            const btnSearchAction = document.getElementById('btn-search-action');
 
-            // --- 객실 이름 매핑 데이터 가져오기 ---
-            let roomMap = {}; 
+            // --- 1. 객실 목록 가져와서 Select 박스 채우기 ---
             async function fetchRoomNames() {
                 const { data: rooms, error } = await supabase.from('rooms').select('id, name');
                 if(rooms) {
                     rooms.forEach(r => {
                         roomMap[r.id] = r.name; 
+                        // 필터 Select에 옵션 추가
+                        const option = document.createElement('option');
+                        option.value = r.id;
+                        option.innerText = r.name;
+                        roomSelect.appendChild(option);
                     });
                 }
             }
             await fetchRoomNames(); 
-            // ------------------------------------
 
+            // --- 2. 기본 날짜 설정 (오늘) ---
             let centerDate = new Date(); 
             let selectedDateStr = formatDate(centerDate); 
+            
+            // 필터 초기값: 오늘
+            setFilterDate('today');
 
-            // 초기 실행
+            // --- 3. 캘린더 초기 실행 ---
             renderWeek(centerDate);
-            renderReservationTable(selectedDateStr);
+            // 초기 데이터 로드는 캘린더 기준(오늘)으로 한번 실행
+            renderReservationTable({ type: 'date', value: selectedDateStr });
 
-            // 이벤트 리스너
+            // --- 이벤트 리스너들 ---
             btnToday.addEventListener('click', function() {
                 const today = new Date();
                 centerDate = new Date(today);
-                selectedDateStr = formatDate(today);
                 renderWeek(centerDate);
-                renderReservationTable(selectedDateStr);
             });
 
             datePickerInput.addEventListener('change', function(e) {
                 if(e.target.value) {
-                    const pickedDate = new Date(e.target.value);
-                    centerDate = new Date(pickedDate);
-                    selectedDateStr = formatDate(pickedDate);
+                    centerDate = new Date(e.target.value);
                     renderWeek(centerDate);
-                    renderReservationTable(selectedDateStr);
                 }
             });
 
-            btnPrev.addEventListener('click', function() {
-                centerDate.setDate(centerDate.getDate() - 1);
-                renderWeek(centerDate);
+            btnPrev.addEventListener('click', () => { centerDate.setDate(centerDate.getDate() - 1); renderWeek(centerDate); });
+            btnNext.addEventListener('click', () => { centerDate.setDate(centerDate.getDate() + 1); renderWeek(centerDate); });
+
+            // ★★★ 검색 버튼 클릭 이벤트 ★★★
+            btnSearchAction.addEventListener('click', function() {
+                const startDate = filterStartDate.value;
+                const endDate = filterEndDate.value;
+                const statusRadio = document.querySelector('input[name="status"]:checked').value;
+                const roomId = roomSelect.value;
+                const keyword = searchKeyword.value;
+
+                // 필터 조건 객체 생성
+                const filters = {
+                    type: 'filter',
+                    startDate: startDate,
+                    endDate: endDate,
+                    status: statusRadio, // 'all', 'confirmed', 'cancelled'
+                    roomId: roomId,      // 'all' or numeric ID
+                    keyword: keyword
+                };
+
+                renderReservationTable(filters);
             });
 
-            btnNext.addEventListener('click', function() {
-                centerDate.setDate(centerDate.getDate() + 1);
-                renderWeek(centerDate);
-            });
-
-            // --- 캘린더 그리기 ---
+            // --- 캘린더 그리기 함수 ---
             async function renderWeek(pivotDate) {
                 dateTrack.innerHTML = ''; 
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
@@ -282,7 +356,7 @@
                 const startDateStr = formatDate(datesToShow[0]);
                 const endDateStr = formatDate(datesToShow[datesToShow.length - 1]);
 
-                const { data: bookings, error } = await supabase
+                const { data: bookings } = await supabase
                     .from('bookings')
                     .select('check_in') 
                     .gte('check_in', startDateStr + ' 00:00:00')
@@ -306,17 +380,15 @@
 
                     const box = document.createElement('div');
                     box.className = 'date-box';
-
                     if (fullDateStr === todayStr) box.classList.add('is-today');
-                    if (fullDateStr === selectedDateStr) {
-                        box.classList.add('active');
-                        updatePeriodText(dateString, dayName);
-                    }
-
+                    
+                    // 캘린더 날짜 클릭 시 해당 날짜로 검색 실행
                     box.addEventListener('click', function() {
-                        selectedDateStr = fullDateStr;
-                        renderWeek(centerDate); 
-                        renderReservationTable(selectedDateStr);
+                        // 모든 date-box active 제거 후 현재 것만 추가
+                        document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
+                        box.classList.add('active');
+                        
+                        renderReservationTable({ type: 'date', value: fullDateStr });
                     });
 
                     let countNum = counts[fullDateStr] || 0;
@@ -329,53 +401,70 @@
                 });
             }
 
-            // --- 하단 테이블 리스트 불러오기 (옵션 및 금액 수정) ---
-            async function renderReservationTable(dateStr) {
-                reservationList.innerHTML = '<tr><td colspan="9" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 데이터를 불러오는 중...</td></tr>';
+            // --- ★★★ 핵심: 데이터 조회 및 테이블 렌더링 함수 ★★★ ---
+            async function renderReservationTable(condition) {
+                reservationList.innerHTML = '<tr><td colspan="9" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 검색 중...</td></tr>';
 
-                const { data: bookings, error } = await supabase
-                    .from('bookings')
-                    .select('*')
-                    .gte('check_in', dateStr + ' 00:00:00')
-                    .lte('check_in', dateStr + ' 23:59:59')
-                    .order('created_at', { ascending: false });
+                let query = supabase.from('bookings').select('*').order('created_at', { ascending: false });
+
+                // 1. 조건에 따른 쿼리 빌드
+                if (condition.type === 'date') {
+                    // 캘린더 클릭 시 (단일 날짜)
+                    query = query.gte('check_in', condition.value + ' 00:00:00')
+                                 .lte('check_in', condition.value + ' 23:59:59');
+                } else if (condition.type === 'filter') {
+                    // 상세 검색 시
+                    if (condition.startDate) query = query.gte('check_in', condition.startDate + ' 00:00:00');
+                    if (condition.endDate) query = query.lte('check_in', condition.endDate + ' 23:59:59');
+                    
+                    if (condition.status !== 'all') {
+                        // DB에는 confirmed, cancelled로 저장되어 있다고 가정
+                        // 한글 매핑이 필요하면 여기서 변환
+                        let dbStatus = condition.status; 
+                        // 예: 화면은 'cancelled' -> DB도 'cancelled' (value값 기준)
+                        query = query.eq('status', dbStatus);
+                    }
+
+                    if (condition.roomId !== 'all') {
+                        query = query.eq('room_id', condition.roomId);
+                    }
+
+                    if (condition.keyword) {
+                        query = query.ilike('guest_name', `%${condition.keyword}%`);
+                    }
+                }
+
+                const { data: bookings, error } = await query;
 
                 if (error) {
-                    console.error("테이블 조회 에러:", error);
-                    reservationList.innerHTML = '<tr><td colspan="9">데이터를 불러오는데 실패했습니다.</td></tr>';
+                    console.error("조회 에러:", error);
+                    reservationList.innerHTML = '<tr><td colspan="9">데이터 조회 중 오류가 발생했습니다.</td></tr>';
                     return;
                 }
 
                 if (!bookings || bookings.length === 0) {
-                    reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">해당 날짜에 예약 내역이 없습니다.</td></tr>';
+                    reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">조회된 예약 내역이 없습니다.</td></tr>';
                     tableSummary.innerText = `총 0개 (완료 0 / 취소 0) | 매출액 0원 | 입금 예정가 0원`;
                     return;
                 }
 
+                // 2. 테이블 HTML 생성
                 let html = '';
-                
-                // [요청 반영] 상단 요약 텍스트 계산 변수들
                 let totalCount = bookings.length;
-                let completedCount = 0; // 예약확정 수
-                let cancelledCount = 0; // 취소 수
-                let totalRevenue = 0; // 매출액
+                let completedCount = 0; 
+                let cancelledCount = 0; 
+                let totalRevenue = 0; 
 
                 bookings.forEach(booking => {
-                    // 카운트 계산
+                    // 통계 계산
                     if (booking.status === 'confirmed' || booking.status === '예약확정') {
                         completedCount++;
-                        // 매출액은 '확정'된 건에 대해서만 더한다고 가정 (혹은 전체 다 더할 수도 있음)
                         totalRevenue += (booking.total_price || 0);
                     } else if (booking.status === 'cancelled' || booking.status === '취소') {
                         cancelledCount++;
-                    } else {
-                        // 그 외 상태도 일단 매출에 포함하거나 제외 (여기서는 confirmed만 매출로 잡음)
-                        // totalRevenue += (booking.total_price || 0); 
                     }
 
-                    // 금액 표시용 변수 (개별 행)
                     const price = booking.total_price || 0;
-
                     let statusBadge = booking.status;
                     if(statusBadge === 'confirmed') statusBadge = '<span style="color:#2ecc71; font-weight:bold;">예약확정</span>';
                     else if(statusBadge === 'cancelled') statusBadge = '<span style="color:#e74c3c; font-weight:bold;">취소</span>';
@@ -384,22 +473,17 @@
                     const checkInDate = new Date(booking.check_in);
                     const checkOutDate = new Date(booking.check_out);
                     const createdDate = new Date(booking.created_at);
-                    
                     const roomName = roomMap[booking.room_id] || `객실 ${booking.room_id}`; 
 
-                    // --- [옵션 데이터 파싱] ---
                     let optionsHtml = '<span style="color:#ccc; font-size:0.8rem;">선택안함</span>';
-                    if (booking.selected_options) {
-                        if (Array.isArray(booking.selected_options) && booking.selected_options.length > 0) {
-                            optionsHtml = `<div class="option-wrapper">`;
-                            booking.selected_options.forEach(opt => {
-                                optionsHtml += `<span class="option-badge">${opt}</span>`;
-                            });
-                            optionsHtml += `</div>`;
-                        }
+                    if (booking.selected_options && Array.isArray(booking.selected_options) && booking.selected_options.length > 0) {
+                        optionsHtml = `<div class="option-wrapper">`;
+                        booking.selected_options.forEach(opt => {
+                            optionsHtml += `<span class="option-badge">${opt}</span>`;
+                        });
+                        optionsHtml += `</div>`;
                     }
 
-                    // --- [테이블 구성] ---
                     html += `
                         <tr>
                             <td><div class="request-text">${booking.guest_request || '-'}</div></td>
@@ -421,9 +505,7 @@
                                 <span class="price-original">객실가 ${Number(booking.room_price).toLocaleString()}원</span>
                                 <span class="price-final">총 결제금액 ${Number(booking.total_price).toLocaleString()}원</span>
                             </td>
-                            <td style="vertical-align: top; padding-top:20px;">
-                                ${optionsHtml}
-                            </td>
+                            <td style="vertical-align: top; padding-top:20px;">${optionsHtml}</td>
                             <td>
                                 <div class="sns-info">
                                     <div class="sns-item"><i class="fa-solid fa-phone"></i> ${booking.phone || '-'}</div>
@@ -437,38 +519,82 @@
                 });
 
                 reservationList.innerHTML = html;
-                
-                // [요청 반영] 상단 요약 텍스트 업데이트
-                // "입금 예정가"는 아직 데이터가 없으므로 0원으로 표시
                 tableSummary.innerText = `총 ${totalCount}개 (완료 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원 | 입금 예정가 0원`;
             }
-
-            // --- 유틸리티 함수들 ---
-            function formatDate(date) { 
-                const yyyy = date.getFullYear();
-                const mm = String(date.getMonth() + 1).padStart(2, '0');
-                const dd = String(date.getDate()).padStart(2, '0');
-                return `${yyyy}-${mm}-${dd}`;
-            }
-
-            function formatDateDot(date) { 
-                const yyyy = date.getFullYear();
-                const mm = String(date.getMonth() + 1).padStart(2, '0');
-                const dd = String(date.getDate()).padStart(2, '0');
-                const dayName = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
-                return `${yyyy}.${mm}.${dd}(${dayName})`;
-            }
-
-            function formatTime(date) {
-                const hh = String(date.getHours()).padStart(2, '0');
-                const mm = String(date.getMinutes()).padStart(2, '0');
-                return `${hh}:${mm}`;
-            }
-
-            function updatePeriodText(dateStr, dayName) {
-                periodText.innerText = `입실일 ${dateStr} (${dayName}) ~ ${dateStr} (${dayName})`;
-            }
         });
+
+        // --- 전역 유틸리티 함수 ---
+        function formatDate(date) { 
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function formatDateDot(date) { 
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            const dayName = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+            return `${yyyy}.${mm}.${dd}(${dayName})`;
+        }
+
+        function formatTime(date) {
+            const hh = String(date.getHours()).padStart(2, '0');
+            const mm = String(date.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        function updatePeriodText(dateStr, dayName) {
+            // 이 기능은 상세검색 필터로 대체되었으나 기존 캘린더 로직 유지를 위해 남겨둠
+        }
+
+        // --- 필터 UI 제어 함수 ---
+        function toggleFilter() {
+            const content = document.getElementById('filter-content');
+            const btnIcon = document.getElementById('toggle-btn-icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                btnIcon.innerHTML = '접기 <i class="fa-solid fa-chevron-up"></i>';
+            } else {
+                content.style.display = 'none';
+                btnIcon.innerHTML = '펼치기 <i class="fa-solid fa-chevron-down"></i>';
+            }
+        }
+
+        function setFilterDate(type) {
+            const today = new Date();
+            let start = new Date();
+            let end = new Date();
+
+            if (type === 'yesterday') {
+                start.setDate(today.getDate() - 1);
+                end.setDate(today.getDate() - 1);
+            } else if (type === 'today') {
+                // start, end is today
+            } else if (type === 'tomorrow') {
+                start.setDate(today.getDate() + 1);
+                end.setDate(today.getDate() + 1);
+            } else if (type === 'next7') {
+                end.setDate(today.getDate() + 7);
+            }
+
+            document.getElementById('filter-start-date').value = formatDate(start);
+            document.getElementById('filter-end-date').value = formatDate(end);
+
+            // 버튼 스타일 활성화
+            const btns = document.querySelectorAll('.btn-group button');
+            btns.forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function resetFilters() {
+            setFilterDate('today');
+            document.querySelector('input[name="status"][value="all"]').checked = true;
+            document.getElementById('room-select').value = 'all';
+            document.getElementById('search-keyword').value = '';
+            document.getElementById('same-day-check').checked = false;
+        }
     </script>
 </body>
 </html>
