@@ -79,9 +79,21 @@
         .fa-tiktok { color: #000000 !important; }
         .fa-envelope { color: #ff6900 !important; }
 
-        /* 옵션 표시 스타일 추가 */
-        .option-list { margin-top: 8px; text-align: left; background: #fafafa; padding: 6px; border-radius: 4px; border: 1px solid #eee; }
-        .option-item { font-size: 0.8rem; color: #555; display: block; margin-bottom: 2px; }
+        /* 옵션 표시 스타일 */
+        .option-badge { 
+            display: inline-block; 
+            background: #fff0e6; 
+            color: #ff6900; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            margin-bottom: 4px;
+            font-weight: bold;
+            border: 1px solid #ffccb0;
+            text-align: left;
+            width: 100%;
+        }
+        .option-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 
         /* 로딩 애니메이션 */
         .loading-spinner { text-align: center; padding: 20px; color: #888; }
@@ -165,12 +177,12 @@
                         <tr>
                             <th style="width: 15%;">요청사항</th>
                             <th style="width: 10%;">예약자 정보</th>
-                            <th style="width: 15%;">객실 타입 (옵션)</th>
+                            <th style="width: 10%;">객실 타입</th>
                             <th style="width: 15%;">입실/퇴실일시</th>
                             <th style="width: 10%;">예약일시</th>
                             <th style="width: 8%;">예약상태</th>
                             <th style="width: 15%;">금액 및 할인정보</th>
-                            <th style="width: 8%;">입실 상태</th>
+                            <th style="width: 12%;">선택 옵션 (조식 등)</th>
                             <th style="width: 15%;">입실 정보 (연락처)</th>
                         </tr>
                     </thead>
@@ -357,21 +369,21 @@
                     
                     const roomName = roomMap[booking.room_id] || `객실 ${booking.room_id}`; 
 
-                    // --- [추가] 옵션 데이터 파싱 및 표시 ---
-                    let optionsHtml = '';
+                    // --- [옵션 데이터 파싱] ---
+                    let optionsHtml = '<span style="color:#ccc; font-size:0.8rem;">선택안함</span>';
                     if (booking.selected_options) {
-                        // Supabase가 JSONB 컬럼을 자동으로 배열로 변환해서 줍니다.
-                        // 만약 배열에 내용이 있다면 HTML 생성
                         if (Array.isArray(booking.selected_options) && booking.selected_options.length > 0) {
-                            optionsHtml = `<div class="option-list">`;
+                            optionsHtml = `<div class="option-wrapper">`;
                             booking.selected_options.forEach(opt => {
-                                optionsHtml += `<span class="option-item">└ ${opt}</span>`;
+                                // 앞의 [A1] 같은 코드만 작게, 뒤는 일반 글씨로 보이게 처리할 수도 있음 (여기선 단순히 출력)
+                                optionsHtml += `<span class="option-badge">${opt}</span>`;
                             });
                             optionsHtml += `</div>`;
                         }
                     }
 
-                    // --- [수정] 금액 표시: total_price 사용 ---
+                    // --- [테이블 구성] ---
+                    // "입실 상태" 컬럼을 제거하고 "선택 옵션" 컬럼에 optionsHtml을 넣음
                     html += `
                         <tr>
                             <td><div class="request-text">${booking.guest_request || '-'}</div></td>
@@ -379,7 +391,7 @@
                             <td>
                                 <span class="room-type">${roomName}</span>
                                 <span class="stay-info">숙박 / 1박</span>
-                                ${optionsHtml} </td>
+                            </td>
                             <td>
                                 ${formatDateDot(checkInDate)} 15:00<br>
                                 ${formatDateDot(checkOutDate)} 11:00
@@ -393,7 +405,9 @@
                                 <span class="price-original">객실가 ${Number(booking.room_price).toLocaleString()}원</span>
                                 <span class="price-final">총 결제금액 ${Number(booking.total_price).toLocaleString()}원</span>
                             </td>
-                            <td><input type="checkbox" checked> 입실완료</td>
+                            <td style="vertical-align: top; padding-top:20px;">
+                                ${optionsHtml}
+                            </td>
                             <td>
                                 <div class="sns-info">
                                     <div class="sns-item"><i class="fa-solid fa-phone"></i> ${booking.phone || '-'}</div>
