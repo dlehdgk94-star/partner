@@ -161,17 +161,13 @@
         </div>
     </main>
 
-    <script>
-        // -----------------------------------------------------------
-        // 1. Supabase 설정
-        // -----------------------------------------------------------
+   <script>
+        // 1. Supabase 설정 (정상)
         const supabaseUrl = 'https://eyasihczaqsacenkjhns.supabase.co';
         const supabaseKey = 'sb_publishable_Kg1O0QUrwWJzQTDCZnbhGcw_otKoMO27'; 
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // -----------------------------------------------------------
         // 2. 전역 변수
-        // -----------------------------------------------------------
         const dateContainer = document.getElementById('dynamicDateContainer');
         const bookingTableBody = document.getElementById('bookingTableBody');
         const tableSummary = document.getElementById('tableSummary');
@@ -184,12 +180,9 @@
 
         let currentStartDate = new Date();
         currentStartDate.setDate(currentStartDate.getDate() - 3);
+        let selectedDate = new Date(); 
 
-        let selectedDate = new Date(); // 현재 선택된 날짜
-
-        // -----------------------------------------------------------
         // 3. 유틸리티 함수
-        // -----------------------------------------------------------
         function toISODateString(date) {
             const yyyy = date.getFullYear();
             const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -199,19 +192,13 @@
 
         function formatDisplayDate(date) {
             const days = ['일', '월', '화', '수', '목', '금', '토'];
-            const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            const dayName = days[date.getDay()];
-            return `${yyyy}.${mm}.${dd} (${dayName})`;
+            return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} (${days[date.getDay()]})`;
         }
 
         function formatDateTime(isoString) {
             if (!isoString) return '-';
             const date = new Date(isoString);
-            return date.toLocaleString('ko-KR', { 
-                month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false 
-            });
+            return date.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
         }
         
         function formatCurrency(amount) {
@@ -219,23 +206,18 @@
         }
 
         function isSameDate(date1, date2) {
-            return date1.getFullYear() === date2.getFullYear() &&
-                   date1.getMonth() === date2.getMonth() &&
-                   date1.getDate() === date2.getDate();
+            return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
         }
 
-        // -----------------------------------------------------------
-        // 4. 메인 로직: 달력 그리기 & 데이터 카운트
-        // -----------------------------------------------------------
+        // 4. 메인 로직
         async function renderCalendar() {
             dateContainer.innerHTML = ''; 
             const today = new Date();
-            
             const rangeStart = new Date(currentStartDate);
             const rangeEnd = new Date(currentStartDate);
             rangeEnd.setDate(rangeEnd.getDate() + 6); 
 
-            // 1) 달력 박스 생성
+            // 달력 박스 생성
             for (let i = 0; i < 7; i++) {
                 const renderDate = new Date(currentStartDate);
                 renderDate.setDate(renderDate.getDate() + i);
@@ -246,123 +228,81 @@
                 box.dataset.date = isoDate;
 
                 if (isSameDate(renderDate, today)) box.classList.add('is-today');
-                
-                // 선택된 날짜 처리
                 if (isSameDate(renderDate, selectedDate)) {
                     box.classList.add('active');
                     selectedDateDisplay.textContent = `선택된 입실일: ${formatDisplayDate(renderDate)}`;
                 }
 
                 const badge = isSameDate(renderDate, today) ? `<div class="today-badge">오늘</div>` : '';
+                box.innerHTML = `${badge}<div class="date-text">${formatDisplayDate(renderDate)}</div><div class="count" id="count-${isoDate}">숙박 -</div>`;
 
-                box.innerHTML = `
-                    ${badge}
-                    <div class="date-text">${formatDisplayDate(renderDate)}</div>
-                    <div class="count" id="count-${isoDate}">숙박 -</div>
-                `;
-
-                // **날짜 박스 클릭 이벤트**
                 box.addEventListener('click', () => {
                     selectedDate = new Date(renderDate);
-                    renderCalendar(); // 박스 active 갱신
-                    loadBookingsForDate(selectedDate); // 하단 테이블 데이터 로드
+                    renderCalendar(); 
+                    loadBookingsForDate(selectedDate);
                 });
-
                 dateContainer.appendChild(box);
             }
 
-            // 2) 카운트 데이터 가져오기
             await fetchAndDisplayCounts(rangeStart, rangeEnd);
-            
-            // 3) 선택된 날짜의 상세 데이터 테이블 로드 (최초 실행 시)
             loadBookingsForDate(selectedDate);
         }
 
-        // 날짜별 예약 건수 조회
         async function fetchAndDisplayCounts(start, end) {
             const startStr = toISODateString(start);
             const endStr = toISODateString(end);
-
             try {
-                const { data, error } = await supabase
-                    .from('bookings')
-                    .select('check_in')
-                    .gte('check_in', startStr)
-                    .lte('check_in', endStr);
-
+                const { data, error } = await supabase.from('bookings').select('check_in').gte('check_in', startStr).lte('check_in', endStr);
                 if (!error && data) {
                     const counts = {};
-                    data.forEach(booking => {
-                        const dateKey = booking.check_in;
-                        counts[dateKey] = (counts[dateKey] || 0) + 1;
-                    });
-
+                    data.forEach(b => counts[b.check_in] = (counts[b.check_in] || 0) + 1);
                     for (let i = 0; i < 7; i++) {
-                        const targetDate = new Date(currentStartDate);
-                        targetDate.setDate(targetDate.getDate() + i);
-                        const isoKey = toISODateString(targetDate);
-                        const countEl = document.getElementById(`count-${isoKey}`);
-                        if (countEl) countEl.innerText = `숙박 ${counts[isoKey] || 0}`;
+                        const d = new Date(currentStartDate); d.setDate(d.getDate() + i);
+                        const k = toISODateString(d);
+                        const el = document.getElementById(`count-${k}`);
+                        if (el) el.innerText = `숙박 ${counts[k] || 0}`;
                     }
                 }
             } catch (err) { console.error(err); }
         }
 
-        // -----------------------------------------------------------
-        // 5. 핵심 로직: 선택된 날짜의 예약 상세 정보 테이블 로드
-        // -----------------------------------------------------------
+        // [수정된 부분] 안전 모드 데이터 로딩 (객실 연결 제거)
         async function loadBookingsForDate(date) {
             const dateStr = toISODateString(date);
-            
-            // 로딩 표시
             bookingTableBody.innerHTML = `<tr><td colspan="9" style="padding:30px;">데이터 불러오는 중...</td></tr>`;
             
             try {
-                // bookings 테이블과 rooms 테이블 조인 (room_id 이용)
+                // rooms (name) 부분을 제거하고 bookings 테이블만 단독 조회
                 const { data, error } = await supabase
                     .from('bookings')
-                    .select(`
-                        *,
-                        rooms ( name )
-                    `)
+                    .select('*') 
                     .eq('check_in', dateStr)
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
-                // 데이터가 없을 경우
                 if (!data || data.length === 0) {
                     bookingTableBody.innerHTML = `<tr><td colspan="9" style="padding:30px; color:#999;">${dateStr} 예약 내역이 없습니다.</td></tr>`;
                     tableSummary.innerText = `총 0개 | 매출액 0원`;
                     return;
                 }
 
-                // 데이터 렌더링
                 let html = '';
                 let totalSales = 0;
 
                 data.forEach(booking => {
-                    // 매출 합계 계산
                     totalSales += (booking.total_price || 0);
 
-                    // 옵션 파싱 (JSON -> 태그)
+                    // 옵션 파싱
                     let optionsHtml = '-';
                     if (booking.selected_options) {
                         try {
-                            // JSONB가 객체나 배열로 올 수 있음
-                            const opts = typeof booking.selected_options === 'string' 
-                                ? JSON.parse(booking.selected_options) 
-                                : booking.selected_options;
-                            
-                            // 배열이거나 객체의 키들을 나열
+                            const opts = typeof booking.selected_options === 'string' ? JSON.parse(booking.selected_options) : booking.selected_options;
                             const optList = Array.isArray(opts) ? opts : Object.keys(opts);
                             optionsHtml = optList.map(opt => `<span class="option-tag">${opt}</span>`).join('');
                         } catch (e) { optionsHtml = '형식오류'; }
                     }
 
-                    // 객실 이름 (조인된 데이터 확인)
-                    const roomName = booking.rooms ? booking.rooms.name : '알수없음';
-                    
                     // SNS 정보
                     let snsInfo = '';
                     if (booking.social_insta) snsInfo += `<div class="contact-info"><i class="fa-brands fa-instagram sns-icon sns-insta"></i> ${booking.social_insta}</div>`;
@@ -370,36 +310,24 @@
 
                     html += `
                         <tr>
-                            <td style="color:#555; font-size:0.85rem; max-width:150px; word-break:keep-all;">
-                                ${booking.guest_request || '-'}
-                            </td>
-                            <td>
-                                <strong>${booking.guest_name}</strong>
-                            </td>
+                            <td style="color:#555; font-size:0.85rem; max-width:150px; word-break:keep-all;">${booking.guest_request || '-'}</td>
+                            <td><strong>${booking.guest_name}</strong></td>
                             <td style="text-align:left; padding-left:15px;">
                                 <div><i class="fa-solid fa-phone" style="font-size:0.7rem; color:#888;"></i> ${booking.phone}</div>
                                 <div class="contact-info">${booking.guest_email || '-'}</div>
                                 ${snsInfo}
                             </td>
                             <td>
-                                <span class="room-type">${roomName}</span>
+                                <span class="room-type">객실 No. ${booking.room_id}</span>
                             </td>
-                            <td style="max-width:200px; text-align:left;">
-                                ${optionsHtml}
-                            </td>
+                            <td style="max-width:200px; text-align:left;">${optionsHtml}</td>
                             <td>
                                 <span style="font-size:0.8rem; color:#666;">입실: ${booking.check_in}</span><br>
                                 <span style="font-size:0.8rem; color:#666;">퇴실: ${booking.check_out}</span>
                             </td>
-                            <td>
-                                <span style="font-size:0.8rem; color:#888;">${formatDateTime(booking.created_at)}</span>
-                            </td>
-                            <td>
-                                <span class="price-final">${formatCurrency(booking.total_price || 0)}</span>
-                            </td>
-                            <td>
-                                <button class="btn-action">입실 호수 저장</button>
-                            </td>
+                            <td><span style="font-size:0.8rem; color:#888;">${formatDateTime(booking.created_at)}</span></td>
+                            <td><span class="price-final">${formatCurrency(booking.total_price || 0)}</span></td>
+                            <td><button class="btn-action">입실 호수 저장</button></td>
                         </tr>
                     `;
                 });
@@ -409,53 +337,23 @@
 
             } catch (err) {
                 console.error(err);
-                bookingTableBody.innerHTML = `<tr><td colspan="9" style="color:red; padding:30px;">오류가 발생했습니다: ${err.message}</td></tr>`;
+                bookingTableBody.innerHTML = `<tr><td colspan="9" style="color:red; padding:30px;">서버 연결 실패: ${err.message} (광고 차단 기능을 확인해주세요)</td></tr>`;
             }
         }
 
-        // -----------------------------------------------------------
-        // 6. 이벤트 리스너
-        // -----------------------------------------------------------
-        prevBtn.addEventListener('click', () => {
-            currentStartDate.setDate(currentStartDate.getDate() - 1);
-            renderCalendar();
+        // 5. 이벤트 리스너
+        prevBtn.addEventListener('click', () => { currentStartDate.setDate(currentStartDate.getDate() - 1); renderCalendar(); });
+        nextBtn.addEventListener('click', () => { currentStartDate.setDate(currentStartDate.getDate() + 1); renderCalendar(); });
+        todayBtn.addEventListener('click', () => { 
+            const now = new Date(); selectedDate = new Date(now); currentStartDate = new Date(now); currentStartDate.setDate(currentStartDate.getDate() - 3); renderCalendar(); 
+        });
+        calendarIcon.addEventListener('click', () => { try { datePicker.showPicker(); } catch { datePicker.focus(); datePicker.click(); } });
+        datePicker.addEventListener('change', (e) => { 
+            if(e.target.value) { const newDate = new Date(e.target.value); selectedDate = new Date(newDate); currentStartDate = new Date(newDate); currentStartDate.setDate(currentStartDate.getDate() - 3); renderCalendar(); } 
         });
 
-        nextBtn.addEventListener('click', () => {
-            currentStartDate.setDate(currentStartDate.getDate() + 1);
-            renderCalendar();
-        });
-
-        todayBtn.addEventListener('click', () => {
-            const now = new Date();
-            selectedDate = new Date(now);
-            currentStartDate = new Date(now);
-            currentStartDate.setDate(currentStartDate.getDate() - 3);
-            renderCalendar();
-        });
-
-        calendarIcon.addEventListener('click', () => {
-            try { datePicker.showPicker(); } 
-            catch { datePicker.focus(); datePicker.click(); }
-        });
-
-        datePicker.addEventListener('change', (e) => {
-            if(e.target.value) {
-                const newDate = new Date(e.target.value);
-                selectedDate = new Date(newDate);
-                currentStartDate = new Date(newDate);
-                currentStartDate.setDate(currentStartDate.getDate() - 3);
-                renderCalendar();
-            }
-        });
-
-        // 실시간 업데이트 구독 (예약 발생 시 자동 갱신)
-        supabase
-            .channel('public:bookings')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-                renderCalendar(); // 카운트 및 테이블 갱신
-            })
-            .subscribe();
+        // 실시간 구독
+        supabase.channel('public:bookings').on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => { renderCalendar(); }).subscribe();
 
         // 초기 실행
         renderCalendar();
