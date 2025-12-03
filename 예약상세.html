@@ -34,8 +34,8 @@
         .btn-today { background-color: #ff6900; color: white; border: 1px solid #ff6900; font-weight: bold; }
         .btn-today:hover { background-color: #e65c00; }
 
-        /* 날짜 컨테이너 (슬라이더 영역) - 수정됨 */
-        .calendar-wrapper { display: flex; align-items: center; gap: 10px; padding-top: 10px; /* 배지 공간 확보 */ }
+        /* 날짜 컨테이너 (슬라이더 영역) */
+        .calendar-wrapper { display: flex; align-items: center; gap: 10px; padding-top: 10px; }
         .date-container { display: flex; justify-content: space-between; gap: 10px; flex-grow: 1; overflow: hidden; }
         
         .date-box { 
@@ -53,12 +53,12 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 85px; /* 높이 고정 */
+            height: 90px; /* 박스 높이 */
         }
 
         .date-box:hover { background-color: #fafafa; border-color: #ccc; }
         
-        /* 선택된 날짜 스타일 (이미지처럼 주황 테두리 + 연한 배경) */
+        /* 선택된 날짜 스타일 */
         .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; color: #333; }
         
         /* 날짜 텍스트 (예: 2025.12.02 (화)) */
@@ -66,10 +66,9 @@
             font-size: 0.95rem; 
             font-weight: bold; 
             color: #333; 
-            margin-bottom: 6px; 
+            margin-bottom: 8px; 
         }
-        .date-box.active .date-title { color: #333; } /* 선택시 텍스트 색상 유지 */
-
+        
         /* 숙박 건수 텍스트 */
         .date-box .stay-count { 
             font-size: 0.9rem; 
@@ -77,7 +76,7 @@
             font-weight: bold; 
         }
 
-        /* 오늘 배지 (박스 상단에 걸치도록) */
+        /* 오늘 배지 */
         .today-badge { 
             position: absolute; 
             top: -10px; 
@@ -92,6 +91,7 @@
             display: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        /* 특정 조건일 때 배지 표시 (필요시 JS에서 제어) */
         .date-box.is-today .today-badge { display: block; }
 
         /* 검색 필터 스타일 */
@@ -144,16 +144,17 @@
 
         <div class="card weekly-status">
             <div class="weekly-header">
-                <h3><i class="fa-solid fa-bullhorn"></i> 입실 현황 캘린더</h3>
+                <h3><i class="fa-solid fa-bullhorn"></i> 1주일 간의 입실 현황</h3>
                 <div class="weekly-controls">
                     <button class="btn-nav" onclick="moveDate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="btn-nav btn-today" onclick="goToday()">오늘</button>
+                    <button class="btn-nav btn-today" onclick="goToday()">오늘 (12.03)</button>
                     <button class="btn-nav" onclick="moveDate(1)"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
             
             <p style="font-size: 0.85rem; color:#666; margin-bottom:15px;">
-                날짜를 클릭하면 해당 일자의 예약 내역을 하단에서 확인할 수 있습니다.
+                1주일 간의 입실 현황에서 날짜는 1일씩 선택 가능합니다.<br>
+                상세 예약내역을 조회하고 싶을 경우 하단 '예약내역 상세 목록'을 활용해주세요.
             </p>
             
             <div class="calendar-wrapper">
@@ -174,6 +175,8 @@
             <div class="filter-summary">
                 <div class="status-tabs">
                     <button class="active">전체 보기</button>
+                    <button>예약확정</button>
+                    <button>취소</button>
                 </div>
             </div>
 
@@ -211,26 +214,29 @@
         const supabaseKey = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 2. 전역 변수
-        let allBookings = []; // 불러온 전체 예약 데이터
-        let currentStartDate = new Date(); // 캘린더 맨 왼쪽 시작 날짜
-        let selectedDate = new Date(); // 현재 클릭해서 선택된 날짜
+        // 2. 전역 변수 (초기값을 2025-12-03으로 고정)
+        let allBookings = []; 
+        let currentStartDate = new Date('2025-12-03T00:00:00'); // 캘린더 시작일 (12월 3일)
+        let selectedDate = new Date('2025-12-03T00:00:00');     // 선택된 날짜 (12월 3일)
+
+        // 가상의 '오늘' 날짜도 12월 3일로 설정 (배지 표시용)
+        const SIMULATED_TODAY = new Date('2025-12-03T00:00:00');
 
         // 3. 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', async () => {
-            // 시간 초기화 (날짜 비교를 위해)
+            // 날짜 시간 초기화 (비교 정확도를 위해)
             currentStartDate.setHours(0,0,0,0);
             selectedDate.setHours(0,0,0,0);
+            SIMULATED_TODAY.setHours(0,0,0,0);
 
-            // 슬라이더가 '오늘'이 가운데 쯤 오도록 시작 날짜 조정 (3일 전부터 시작)
-            currentStartDate.setDate(currentStartDate.getDate() - 3);
-
+            // 기존 코드에 있던 '-3일' 로직을 제거하여 12.03부터 바로 시작하도록 설정했습니다.
+            
             await fetchAllReservations(); // 데이터 가져오기
             renderCalendar(); // 캘린더 그리기
-            renderTable(); // 테이블 그리기 (오늘 날짜 기준)
+            renderTable(); // 테이블 그리기
         });
 
-        // 4. 데이터 가져오기 (전체 데이터를 가져와서 프론트에서 필터링)
+        // 4. 데이터 가져오기
         async function fetchAllReservations() {
             const { data, error } = await supabase
                 .from('bookings')
@@ -238,7 +244,7 @@
                     *,
                     rooms ( name )
                 `)
-                .order('check_in', { ascending: false }); // 입실일 순 정렬
+                .order('check_in', { ascending: false });
 
             if (error) {
                 console.error('에러 발생:', error);
@@ -248,15 +254,12 @@
             }
         }
 
-        // 5. 날짜 슬라이더(캘린더) 렌더링 함수 - 수정됨
+        // 5. 날짜 슬라이더(캘린더) 렌더링
         function renderCalendar() {
             const container = document.getElementById('date-slider');
-            container.innerHTML = ''; // 초기화
+            container.innerHTML = ''; 
 
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
-            // 시작 날짜부터 7일치를 생성
+            // 시작 날짜(currentStartDate)부터 7일치를 생성
             for (let i = 0; i < 7; i++) {
                 // 날짜 계산
                 const tempDate = new Date(currentStartDate);
@@ -265,7 +268,7 @@
                 // 날짜 포맷 (YYYY-MM-DD) - 데이터 비교용
                 const dateStr = toYMD(tempDate);
                 
-                // 화면 표시용: 2025.12.02 (화) 형식 조합
+                // 화면 표시용 텍스트
                 const year = tempDate.getFullYear();
                 const month = String(tempDate.getMonth()+1).padStart(2,'0');
                 const day = String(tempDate.getDate()).padStart(2,'0');
@@ -274,19 +277,19 @@
                 
                 const dateDisplayText = `${year}.${month}.${day} (${dayLabel})`;
 
-                // 오늘인지 확인
-                const isToday = tempDate.getTime() === today.getTime();
+                // 2025-12-03일 때 '오늘' 배지를 달기 위해 비교
+                const isToday = tempDate.getTime() === SIMULATED_TODAY.getTime();
                 
-                // 선택된 날짜인지 확인
+                // 현재 선택된 날짜인지 확인
                 const isActive = tempDate.getTime() === selectedDate.getTime();
 
-                // 해당 날짜 숙박 카운트 (bookings 데이터에서 check_in 날짜와 일치하는 것 필터)
+                // 숙박 건수 카운트
                 const count = allBookings.filter(b => b.check_in === dateStr).length;
 
                 // HTML 생성
                 const div = document.createElement('div');
                 div.className = `date-box ${isActive ? 'active' : ''} ${isToday ? 'is-today' : ''}`;
-                div.onclick = () => selectDate(tempDate); // 클릭 시 이벤트 연결
+                div.onclick = () => selectDate(tempDate);
 
                 div.innerHTML = `
                     <div class="today-badge">오늘</div>
@@ -309,12 +312,9 @@
         }
 
         function goToday() {
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            
-            selectedDate = new Date(today);
-            currentStartDate = new Date(today);
-            currentStartDate.setDate(currentStartDate.getDate() - 3); // 오늘이 가운데 오게
+            // '오늘' 버튼 클릭 시 2025-12-03로 돌아가도록 설정
+            selectedDate = new Date(SIMULATED_TODAY);
+            currentStartDate = new Date(SIMULATED_TODAY);
             
             renderCalendar();
             renderTable();
@@ -322,23 +322,20 @@
 
         function selectDate(date) {
             selectedDate = new Date(date);
-            renderCalendar(); // 선택 효과 적용을 위해 재렌더링
-            renderTable(); // 하단 테이블 업데이트
+            renderCalendar();
+            renderTable();
         }
 
-        // 7. 테이블 렌더링 (선택된 날짜 기준 필터링)
+        // 7. 테이블 렌더링
         function renderTable() {
             const tableBody = document.getElementById('reservation-list');
             const resultCount = document.getElementById('result-count');
-            const targetDateStr = toYMD(selectedDate); // 'YYYY-MM-DD'
+            const targetDateStr = toYMD(selectedDate);
 
-            // 선택된 날짜와 입실일(check_in)이 같은 예약만 필터링
             const filteredBookings = allBookings.filter(b => b.check_in === targetDateStr);
 
-            // 결과 건수 업데이트
             resultCount.innerText = `조회 결과: ${filteredBookings.length}건`;
-
-            tableBody.innerHTML = ''; // 초기화
+            tableBody.innerHTML = '';
 
             if (filteredBookings.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="9" style="padding:40px; color:#888;">해당 날짜에 예약 내역이 없습니다.</td></tr>';
@@ -387,7 +384,7 @@
             });
         }
 
-        // 유틸리티 함수: Date 객체를 YYYY-MM-DD 문자열로 변환
+        // 유틸리티 함수
         function toYMD(date) {
             const y = date.getFullYear();
             const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -395,7 +392,6 @@
             return `${y}-${m}-${d}`;
         }
 
-        // 유틸리티 함수: YYYY.MM.DD 형식 표시
         function formatDateDot(dateString) {
             if (!dateString) return '-';
             const date = new Date(dateString);
@@ -405,14 +401,12 @@
             return `${y}.${m}.${d}`;
         }
 
-        // 유틸리티 함수: 시간 HH:MM 표시
         function formatTime(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
             return date.toTimeString().substring(0, 5);
         }
 
-        // 유틸리티 함수: 가격 콤마 표시
         function formatPrice(price) {
             return price ? price.toLocaleString() + '원' : '0원';
         }
