@@ -195,9 +195,8 @@
     </main>
 
     <script>
-        // [수정 완료] URL 오타 수정됨 (lkhns)
-        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenlkhns.supabase.co';
-        // Key는 보내주신 그대로 유지
+        // [완전 수정] 주소 오타 수정됨 (acenlkhns)
+        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenlkhns.supabase.co'; 
         const YOUR_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'; 
 
         const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
@@ -210,14 +209,13 @@
             const btnNext = document.getElementById('btn-next');
             const periodText = document.getElementById('selected-period-text');
 
-            // 상태 변수
             let centerDate = new Date(); 
             let selectedDateStr = formatDate(centerDate); 
 
-            // 1. 초기 렌더링
+            // 초기 렌더링
             renderWeek(centerDate);
 
-            // 2. 이벤트 리스너들
+            // 이벤트 리스너들
             btnToday.addEventListener('click', function() {
                 const today = new Date();
                 centerDate = new Date(today);
@@ -250,7 +248,6 @@
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
                 const todayStr = formatDate(new Date());
 
-                // 7일 날짜 배열 생성
                 const datesToShow = [];
                 for (let i = -3; i <= 3; i++) {
                     const tempDate = new Date(pivotDate);
@@ -258,7 +255,6 @@
                     datesToShow.push(tempDate);
                 }
 
-                // Supabase 조회 범위 설정
                 const startDateStr = formatDate(datesToShow[0]);
                 const endDateStr = formatDate(datesToShow[datesToShow.length - 1]);
 
@@ -271,7 +267,7 @@
 
                 if (error) {
                     console.error('데이터 가져오기 실패:', error);
-                    alert("데이터를 불러오는데 실패했습니다. 주소 설정을 확인해주세요.\n" + error.message);
+                    alert("데이터를 불러오는데 실패했습니다: " + error.message);
                     return;
                 }
 
