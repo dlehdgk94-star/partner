@@ -200,9 +200,14 @@
     </main>
 
     <script>
-        // 1. Supabase 설정
-        const supabaseUrl = 'https://eyasihczaqsacenkjhns.supabase.co';
-        const supabaseKey = 'sb_publishable_Kg1O0QUrwWJzQTDCZnbhGcw_otKoMO27'; 
+        // 1. Supabase 설정 (수정됨)
+        // [중요] 주소 오타 수정됨: kjhns -> klhns
+        const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
+        
+        // [중요] 여기에 Settings > API > Project API keys > anon public 키를 복사해 넣으세요.
+        // (eyJ로 시작하는 아주 긴 문자열이어야 합니다. sb_publishable... 키는 안 됩니다!)
+        const supabaseKey = '여기에_대시보드에서_복사한_anon_public_키를_붙여넣으세요'; 
+        
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         // 2. 전역 변수 설정
