@@ -48,7 +48,7 @@
             opacity: 0; cursor: pointer;
         }
 
-        /* [수정] 날짜 슬라이더 전체 영역 */
+        /* 날짜 슬라이더 전체 영역 */
         .slider-wrapper {
             display: flex;
             align-items: center;
@@ -57,7 +57,7 @@
             background-color: #fff;
         }
 
-        /* [수정] 좌우 화살표 버튼 */
+        /* 좌우 화살표 버튼 */
         .nav-arrow {
             width: 40px; height: 80px; /* 버튼 크기 */
             border: 1px solid #eee; background-color: #fff;
@@ -65,6 +65,7 @@
             color: #888; font-size: 1.2rem;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
+            margin-top: 10px; /* 박스 높이에 맞춰 중앙 정렬 보정 */
         }
         .nav-arrow:hover { background-color: #f9f9f9; color: #ff6900; border-color: #ff6900; }
 
@@ -72,11 +73,13 @@
         .date-view-window {
             flex-grow: 1;
             overflow: hidden; /* 넘치는 것 숨김 */
+            /* [중요] 뱃지가 위로 튀어나올 공간 확보 */
+            padding-top: 25px; 
+            padding-bottom: 5px;
         }
         .date-container { 
             display: flex; 
             gap: 10px; 
-            /* 가로 스크롤 제거 (버튼으로 제어) */
             width: 100%;
         }
 
@@ -93,11 +96,22 @@
         .date-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #333; white-space: nowrap; }
         .count { font-size: 0.9rem; color: #ff6900; font-weight: bold; white-space: nowrap; }
         
+        /* [수정] 오늘 뱃지 스타일 */
         .today-badge { 
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%); 
-            background-color: #ff6900; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; 
+            position: absolute; 
+            /* 테두리와 겹치지 않게 위로 이동 (-10px -> -24px) */
+            top: -24px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background-color: #ff6900; 
+            color: white; 
+            font-size: 0.7rem; 
+            padding: 3px 8px; 
+            border-radius: 12px; 
             display: none; 
             white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 약간의 그림자 추가 */
+            font-weight: bold;
         }
         .date-box.is-today .today-badge { display: block; }
 
