@@ -7,125 +7,249 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* 기본 스타일 초기화 */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f5f7fa; color: #333; display: flex; min-height: 100vh; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-        /* 사이드바 스타일 */
-        .sidebar { width: 240px; background-color: #ff6900; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
-        .menu-list { list-style: none; margin-top: 10px; }
-        .menu-item { padding: 15px 20px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
-        .menu-item:hover { background-color: #e65c00; }
-        .menu-item.active { background-color: #cc5200; font-weight: bold; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+        }
 
-        /* 메인 콘텐츠 영역 */
-        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
-        .page-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; color: #333; }
-        .page-desc { font-size: 0.9rem; color: #666; margin-bottom: 30px; }
-
-        /* 카드 공통 스타일 */
-        .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        /* 주간 현황 (날짜 슬라이더) 스타일 */
-        .weekly-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .weekly-controls { display: flex; gap: 5px; }
-        .btn-nav { border: 1px solid #ddd; background: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        .btn-nav:hover { background: #f0f0f0; }
-        .btn-today { background-color: #ff6900; color: white; border: 1px solid #ff6900; font-weight: bold; }
-        .btn-today:hover { background-color: #e65c00; }
-
-        /* 날짜 컨테이너 (슬라이더 영역) */
-        .calendar-wrapper { display: flex; align-items: center; gap: 10px; padding-top: 15px; /* 뱃지가 잘리지 않도록 상단 여백 확보 */ }
-        .date-container { display: flex; justify-content: space-between; gap: 10px; flex-grow: 1; overflow: visible; /* 뱃지가 테두리 밖으로 나가도 보이게 설정 */ }
-        
-        /* 날짜 박스 스타일 */
-        .date-box { 
-            border: 1px solid #ddd; 
-            border-radius: 4px; 
-            padding: 15px 0; 
-            flex: 1; 
-            text-align: center; 
-            cursor: pointer; 
-            position: relative; /* 뱃지 위치 기준점 */
-            transition: all 0.2s;
-            background-color: #fff;
-            min-width: 0;
+        /* --- 좌측 사이드바 --- */
+        .sidebar {
+            width: 240px;
+            background-color: #ff6900; /* 브랜드 컬러 */
+            color: white;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
             align-items: center;
-            height: 90px;
+            gap: 10px;
         }
 
-        .date-box:hover { background-color: #fafafa; border-color: #ccc; }
-        
-        /* 선택된 날짜 스타일 */
-        .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; color: #333; }
-        
-        /* 오늘 뱃지 스타일 (요청하신 디자인) */
-        .today-badge { 
-            position: absolute; 
-            top: -11px; /* 테두리 위에 걸치도록 위로 올림 */
-            left: 50%; 
-            transform: translateX(-50%); 
-            background-color: #ff6900; 
-            color: white; 
-            font-size: 0.75rem; 
-            font-weight: 800;
-            padding: 3px 12px;
-            border-radius: 20px; 
-            display: none; /* 기본은 숨김 */
-            box-shadow: 0 2px 5px rgba(255, 105, 0, 0.3); /* 그림자 효과 */
-            z-index: 10;
-            line-height: 1.2;
-            white-space: nowrap;
+        .menu-list {
+            list-style: none;
+            margin-top: 10px;
         }
 
-        /* 오늘 날짜일 때만 뱃지 표시 */
-        .date-box.is-today .today-badge { display: block; }
-        
-        /* 날짜 텍스트 (예: 2025.12.02 (화)) */
-        .date-box .date-text { 
-            font-size: 0.95rem; 
-            font-weight: bold; 
-            color: #333; 
-            margin-bottom: 8px; 
-        }
-        
-        /* 숙박 건수 텍스트 */
-        .date-box .count { 
-            font-size: 0.9rem; 
-            color: #ff6900; 
-            font-weight: bold; 
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
         }
 
-        /* 검색 필터 스타일 */
-        .search-filter { border: 1px solid #eee; }
-        .filter-summary { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 4px; }
-        .status-tabs button { padding: 8px 16px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 0.9rem; margin-right: -1px; }
-        .status-tabs button.active { background-color: #ff6900; color: white; border-color: #ff6900; }
+        .menu-item:hover {
+            background-color: #e65c00;
+        }
+
+        .menu-item.active {
+            background-color: #cc5200;
+            font-weight: bold;
+        }
+
+        /* --- 메인 콘텐츠 영역 --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .page-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* 섹션 공통 카드 스타일 */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        /* 1. 주간 입실 현황 (상단 날짜 슬라이더) */
+        .weekly-status h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .date-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .date-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px 0;
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* [수정] 활성화 상태 색상 변경 (파란색 -> 주황색) */
+        .date-box.active {
+            border: 2px solid #ff6900;
+            background-color: #fff0e6; /* 연한 주황색 배경 */
+        }
+
+        .date-box .date-text {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            white-space: nowrap; /* 한 줄 표시를 위해 추가 */
+        }
+
+        /* [수정] 카운트 색상 변경 (파란색 -> 주황색) */
+        .date-box .count {
+            font-size: 0.9rem;
+            color: #ff6900;
+            font-weight: bold;
+        }
+        
+        /* [수정] 오늘 배지 색상 변경 (파란색 -> 주황색) */
+        .today-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff6900;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        /* 2. 검색 및 필터 */
+        .search-filter {
+            border: 1px solid #eee;
+        }
+        
+        .filter-summary {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .status-tabs button {
+            padding: 8px 16px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-right: -1px;
+        }
+        
+        /* [수정] 탭 활성화 색상 변경 (파란색 -> 주황색) */
+        .status-tabs button.active {
+            background-color: #ff6900;
+            color: white;
+            border-color: #ff6900;
+        }
+        
         .status-tabs button:first-child { border-radius: 4px 0 0 4px; }
         .status-tabs button:last-child { border-radius: 0 4px 4px 0; }
 
-        /* 테이블 스타일 */
-        .table-controls { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
-        .summary-text { font-size: 0.9rem; font-weight: bold; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; border-top: 2px solid #ddd; }
-        .data-table th { background-color: #f5f5f5; padding: 12px; text-align: center; border-bottom: 1px solid #ddd; font-weight: bold; color: #555; }
-        .data-table td { padding: 15px 12px; border-bottom: 1px solid #eee; vertical-align: middle; text-align: center; }
+        /* 3. 데이터 테이블 */
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
 
-        /* 테이블 내부 요소 */
+        .summary-text {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            border-top: 2px solid #ddd;
+        }
+
+        .data-table th {
+            background-color: #f5f5f5;
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .data-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        /* 테이블 내부 스타일 */
+        .btn-detail {
+            border: 1px solid #ccc;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
         .room-type { font-weight: bold; display: block; }
+        /* [수정] 숙박 정보 색상 변경 (파란색 -> 주황색) */
         .stay-info { font-size: 0.8rem; color: #ff6900; }
-        .price-final { font-weight: bold; color: #333; }
         
-        .request-text { font-size: 0.85rem; color: #555; text-align: left; max-width: 150px; line-height: 1.4; }
-        .sns-info { display: flex; flex-direction: column; gap: 4px; text-align: left; font-size: 0.8rem; color: #444; }
-        .sns-item { display: flex; align-items: center; gap: 6px; }
-        .sns-item i { width: 16px; text-align: center; color: #888; }
-        .fa-instagram { color: #E1306C !important; }
-        .fa-tiktok { color: #000000 !important; }
-        .fa-envelope { color: #ff6900 !important; }
+        .price-original { text-decoration: line-through; color: #999; font-size: 0.8rem; display: block;}
+        .price-final { font-weight: bold; color: #333; }
+
+        .btn-action {
+            border: 1px solid #ccc;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+            width: 100%;
+        }
 
     </style>
 </head>
@@ -148,270 +272,149 @@
         <p class="page-desc">예약한 고객의 예약정보를 입실 일자별 & 상세 조건별로 조회할 수 있습니다.</p>
 
         <div class="card weekly-status">
-            <div class="weekly-header">
-                <h3><i class="fa-solid fa-bullhorn"></i> 1주일 간의 입실 현황</h3>
-                <div class="weekly-controls">
-                    <button class="btn-nav" onclick="moveDate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="btn-nav btn-today" onclick="goToday()">오늘 (12.03)</button>
-                    <button class="btn-nav" onclick="moveDate(1)"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
-            </div>
-            
+            <h3><i class="fa-solid fa-bullhorn"></i> 1주일 간의 입실 현황</h3>
             <p style="font-size: 0.85rem; color:#666; margin-bottom:15px;">
                 1주일 간의 입실 현황에서 날짜는 1일씩 선택 가능합니다.<br>
-                상세 예약내역을 조회하고 싶을 경우 하단 '예약내역 상세 목록'을 활용해주세요.
+                상세 예약내역을 조회하고 싶을 경우 하단 '예약내역 상세 검색'을 활용해주세요.
             </p>
             
-            <div class="calendar-wrapper">
-                <div class="date-container" id="date-slider"></div>
+            <div class="date-container">
+                <div class="date-box">
+                    <div class="date-text">2025.11.29 (토)</div>
+                    <div class="count">숙박 11</div>
+                </div>
+                <div class="date-box">
+                    <div class="date-text">2025.11.30 (일)</div>
+                    <div class="count">숙박 6</div>
+                </div>
+                <div class="date-box">
+                    <div class="date-text">2025.12.01 (월)</div>
+                    <div class="count">숙박 6</div>
+                </div>
+                <div class="date-box active">
+                    <div class="today-badge">오늘</div>
+                    <div class="date-text">2025.12.02 (화)</div>
+                    <div class="count">숙박 1</div>
+                </div>
+                <div class="date-box">
+                    <div class="date-text">2025.12.03 (수)</div>
+                    <div class="count">숙박 1</div>
+                </div>
+                <div class="date-box">
+                    <div class="date-text">2025.12.04 (목)</div>
+                    <div class="count">숙박 2</div>
+                </div>
+                <div class="date-box">
+                    <div class="date-text">2025.12.05 (금)</div>
+                    <div class="count">숙박 3</div>
+                </div>
             </div>
         </div>
 
         <div class="card search-filter">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h4><i class="fa-solid fa-magnifying-glass"></i> 예약내역 상세 목록</h4>
+                <h4><i class="fa-solid fa-magnifying-glass"></i> 예약내역 상세 검색</h4>
+                <button style="border:none; background:none; cursor:pointer;">펼치기 <i class="fa-solid fa-chevron-down"></i></button>
             </div>
             
             <div class="filter-box" style="border-top:1px solid #eee; padding-top:15px;">
-                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">선택된 날짜 (입실 기준)</p>
-                <p style="font-size:0.9rem; color:#ff6900; font-weight:bold;" id="selected-date-display">-</p>
+                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">기간 설정 조건</p>
+                <p style="font-size:0.9rem; color:#555;">입실일 2025.12.02 (화) ~ 2025.12.02 (화)</p>
             </div>
 
             <div class="filter-summary">
                 <div class="status-tabs">
-                    <button class="active">전체 보기</button>
-                    <button>예약확정</button>
-                    <button>취소</button>
+                    <button class="active">입실 상태 전체</button>
+                    <button>입실 전만 보기</button>
+                    <button>입실 완료만 보기</button>
                 </div>
             </div>
 
             <div style="margin-top:20px;">
                 <div class="table-controls">
-                    <span class="summary-text" id="result-count">조회 결과: 0건</span>
+                    <span class="summary-text">총 2개 (완료 2 / 취소 0) | 매출액 85,000원 | 입금 예정가 76,500원</span>
+                    <select style="padding:4px;">
+                        <option>입실일 내림차순</option>
+                    </select>
                 </div>
 
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>요청사항</th>
+                            <th>예약번호</th>
                             <th>예약자 정보</th>
                             <th>객실 타입</th>
                             <th>입실/퇴실일시</th>
                             <th>예약일시</th>
                             <th>예약상태</th>
-                            <th>금액</th>
+                            <th>금액 및 할인정보</th>
                             <th>입실 상태</th>
-                            <th>입실 정보 (연락처)</th>
+                            <th>입실 정보</th>
                         </tr>
                     </thead>
-                    <tbody id="reservation-list">
-                        <tr><td colspan="9">데이터를 불러오는 중입니다...</td></tr>
+                    <tbody>
+                        <tr>
+                            <td><button class="btn-detail">상세보기</button></td>
+                            <td><strong>권품신</strong></td>
+                            <td>
+                                <span class="room-type">스탠다드</span>
+                                <span class="stay-info">숙박 / 1박</span>
+                            </td>
+                            <td>
+                                2025.12.02(화) 17:00<br>
+                                2025.12.03(수) 12:00
+                            </td>
+                            <td>
+                                2025.11.27(목)<br>
+                                <span style="font-size:0.8rem; color:#888;">미래예약</span>
+                            </td>
+                            <td>예약완료</td>
+                            <td>
+                                <span class="price-original">판매가 55,000원</span>
+                                <span class="price-final">입금예정가 49,500원</span>
+                            </td>
+                            <td><input type="checkbox"> 입실완료</td>
+                            <td>
+                                <button class="btn-action">입실 호수 저장</button>
+                                <button class="btn-action">실제 입실 인정</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><button class="btn-detail">상세보기</button></td>
+                            <td><strong>유완규</strong></td>
+                            <td>
+                                <span class="room-type">럭셔리</span>
+                                <span class="stay-info">숙박 / 1박</span>
+                            </td>
+                            <td>
+                                2025.12.02(화) 10:30<br>
+                                2025.12.02(화) 14:30
+                            </td>
+                            <td>
+                                2025.12.02(화)<br>
+                                <span style="font-size:0.8rem; color:#888;">당일건</span>
+                            </td>
+                            <td>예약완료</td>
+                            <td>
+                                <span class="price-original">판매가 30,000원</span>
+                                <span class="price-final">입금예정가 27,000원</span>
+                            </td>
+                            <td><input type="checkbox"> 입실완료</td>
+                            <td>
+                                <button class="btn-action">입실 호수 저장</button>
+                                <button class="btn-action">실제 입실 인정</button>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
+            
+            <div style="text-align:center; margin-top:20px;">
+                <button style="border:1px solid #ddd; background:white; padding:5px 10px;">&lt;</button>
+                <button style="border:1px solid #ff6900; background:white; color:#ff6900; font-weight:bold; padding:5px 10px;">1</button>
+                <button style="border:1px solid #ddd; background:white; padding:5px 10px;">&gt;</button>
+            </div>
         </div>
     </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // 1. Supabase 설정
-        const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
-        const supabaseKey = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        // 2. 전역 변수 (초기값을 2025-12-03으로 고정)
-        let allBookings = []; 
-        let currentStartDate = new Date('2025-12-03T00:00:00'); // 캘린더 시작일
-        let selectedDate = new Date('2025-12-03T00:00:00');     // 선택된 날짜
-
-        // 가상의 '오늘' 날짜 (배지 표시용)
-        const SIMULATED_TODAY = new Date('2025-12-03T00:00:00');
-
-        // 3. 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 시간 초기화
-            currentStartDate.setHours(0,0,0,0);
-            selectedDate.setHours(0,0,0,0);
-            SIMULATED_TODAY.setHours(0,0,0,0);
-
-            await fetchAllReservations(); // 데이터 가져오기
-            renderCalendar(); // 캘린더 그리기
-            renderTable(); // 테이블 그리기
-        });
-
-        // 4. 데이터 가져오기
-        async function fetchAllReservations() {
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(`
-                    *,
-                    rooms ( name )
-                `)
-                .order('check_in', { ascending: false });
-
-            if (error) {
-                console.error('에러 발생:', error);
-                alert('데이터를 불러오지 못했습니다.');
-            } else {
-                allBookings = data;
-            }
-        }
-
-        // 5. 날짜 슬라이더(캘린더) 렌더링
-        function renderCalendar() {
-            const container = document.getElementById('date-slider');
-            container.innerHTML = ''; 
-
-            // 시작 날짜(currentStartDate)부터 7일치를 생성
-            for (let i = 0; i < 7; i++) {
-                // 날짜 계산
-                const tempDate = new Date(currentStartDate);
-                tempDate.setDate(tempDate.getDate() + i);
-                
-                // 날짜 포맷 (YYYY-MM-DD)
-                const dateStr = toYMD(tempDate);
-                
-                // 화면 표시용 텍스트
-                const year = tempDate.getFullYear();
-                const month = String(tempDate.getMonth()+1).padStart(2,'0');
-                const day = String(tempDate.getDate()).padStart(2,'0');
-                const days = ['일', '월', '화', '수', '목', '금', '토'];
-                const dayLabel = days[tempDate.getDay()];
-                
-                const dateDisplayText = `${year}.${month}.${day} (${dayLabel})`;
-
-                // 오늘 여부 및 선택 여부 확인
-                const isToday = dateStr === toYMD(SIMULATED_TODAY);
-                const isActive = dateStr === toYMD(selectedDate);
-
-                // 숙박 건수 카운트
-                const count = allBookings.filter(b => b.check_in === dateStr).length;
-
-                // HTML 생성
-                const div = document.createElement('div');
-                div.className = `date-box ${isActive ? 'active' : ''} ${isToday ? 'is-today' : ''}`;
-                div.onclick = () => selectDate(tempDate);
-
-                // 요청하신 구조: date-text, count 클래스명 사용
-                div.innerHTML = `
-                    <div class="today-badge">오늘</div>
-                    <div class="date-text">${dateDisplayText}</div>
-                    <div class="count">숙박 ${count}</div>
-                `;
-
-                container.appendChild(div);
-            }
-            
-            // 상단 선택된 날짜 텍스트 업데이트
-            document.getElementById('selected-date-display').innerText = 
-                `${toYMD(selectedDate)} (${['일','월','화','수','목','금','토'][selectedDate.getDay()]})`;
-        }
-
-        // 6. 날짜 이동 및 선택 함수들
-        function moveDate(days) {
-            currentStartDate.setDate(currentStartDate.getDate() + days);
-            renderCalendar();
-        }
-
-        function goToday() {
-            // '오늘' 버튼 클릭 시 2025-12-03로 돌아가도록 설정
-            selectedDate = new Date(SIMULATED_TODAY);
-            currentStartDate = new Date(SIMULATED_TODAY);
-            
-            renderCalendar();
-            renderTable();
-        }
-
-        function selectDate(date) {
-            selectedDate = new Date(date);
-            renderCalendar();
-            renderTable();
-        }
-
-        // 7. 테이블 렌더링
-        function renderTable() {
-            const tableBody = document.getElementById('reservation-list');
-            const resultCount = document.getElementById('result-count');
-            const targetDateStr = toYMD(selectedDate);
-
-            const filteredBookings = allBookings.filter(b => b.check_in === targetDateStr);
-
-            resultCount.innerText = `조회 결과: ${filteredBookings.length}건`;
-            tableBody.innerHTML = '';
-
-            if (filteredBookings.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="padding:40px; color:#888;">해당 날짜에 예약 내역이 없습니다.</td></tr>';
-                return;
-            }
-
-            filteredBookings.forEach(booking => {
-                const roomName = booking.rooms ? booking.rooms.name : '객실정보 없음';
-                const requestText = booking.guest_request || '요청사항 없음';
-                const email = booking.guest_email || '-';
-                const insta = booking.social_insta ? `@${booking.social_insta}` : '-';
-                const tiktok = booking.social_tiktok ? `@${booking.social_tiktok}` : '-';
-                const status = booking.status || '예약완료';
-
-                const row = `
-                    <tr>
-                        <td><div class="request-text">${requestText}</div></td>
-                        <td><strong>${booking.guest_name}</strong></td>
-                        <td>
-                            <span class="room-type">${roomName}</span>
-                            <span class="stay-info">숙박</span>
-                        </td>
-                        <td>
-                            ${formatDateDot(booking.check_in)} 15:00<br>
-                            ${formatDateDot(booking.check_out)} 11:00
-                        </td>
-                        <td>
-                            ${formatDateDot(booking.created_at)}<br>
-                            <span style="font-size:0.8rem; color:#888;">${formatTime(booking.created_at)}</span>
-                        </td>
-                        <td>${status}</td>
-                        <td>
-                            <span class="price-final">${formatPrice(booking.total_price)}</span>
-                        </td>
-                        <td><input type="checkbox"> 입실완료</td>
-                        <td>
-                            <div class="sns-info">
-                                <div class="sns-item"><i class="fa-solid fa-envelope"></i> ${email}</div>
-                                <div class="sns-item"><i class="fa-brands fa-instagram"></i> ${insta}</div>
-                                <div class="sns-item"><i class="fa-brands fa-tiktok"></i> ${tiktok}</div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
-
-        // 유틸리티 함수
-        function toYMD(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        }
-
-        function formatDateDot(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}.${m}.${d}`;
-        }
-
-        function formatTime(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            return date.toTimeString().substring(0, 5);
-        }
-
-        function formatPrice(price) {
-            return price ? price.toLocaleString() + '원' : '0원';
-        }
-    </script>
 </body>
 </html>
