@@ -191,15 +191,30 @@
         const YOUR_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'; 
         const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const dateTrack = document.getElementById('date-track');
             const datePickerInput = document.getElementById('date-picker-input');
             const btnToday = document.getElementById('btn-today');
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
             const periodText = document.getElementById('selected-period-text');
-            const reservationList = document.getElementById('reservation-list'); // 테이블 바디
-            const tableSummary = document.getElementById('table-summary'); // 테이블 위 요약 텍스트
+            const reservationList = document.getElementById('reservation-list');
+            const tableSummary = document.getElementById('table-summary');
+
+            // --- [추가 기능] 객실 이름 매핑을 위한 데이터 미리 가져오기 ---
+            let roomMap = {}; // id : '이름' 형태로 저장할 객체
+
+            async function fetchRoomNames() {
+                const { data: rooms, error } = await supabase.from('rooms').select('id, name');
+                if(rooms) {
+                    rooms.forEach(r => {
+                        roomMap[r.id] = r.name; // 예: roomMap[1] = '스탠다드'
+                    });
+                }
+            }
+            // 페이지 로드시 객실정보부터 한번 가져옵니다.
+            await fetchRoomNames(); 
+            // -----------------------------------------------------------
 
             // 상태 변수
             let centerDate = new Date(); 
@@ -207,7 +222,7 @@
 
             // 1. 초기 실행
             renderWeek(centerDate);
-            renderReservationTable(selectedDateStr); // 초기 날짜 데이터 로드
+            renderReservationTable(selectedDateStr);
 
             // 2. 이벤트 리스너들
             btnToday.addEventListener('click', function() {
@@ -238,7 +253,7 @@
                 renderWeek(centerDate);
             });
 
-            // --- [핵심 기능 1] 캘린더 그리기 (기존과 동일) ---
+            // --- 캘린더 그리기 ---
             async function renderWeek(pivotDate) {
                 dateTrack.innerHTML = ''; 
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
@@ -254,7 +269,6 @@
                 const startDateStr = formatDate(datesToShow[0]);
                 const endDateStr = formatDate(datesToShow[datesToShow.length - 1]);
 
-                // 예약 카운트 조회
                 const { data: bookings, error } = await supabase
                     .from('bookings')
                     .select('check_in') 
@@ -287,10 +301,9 @@
                     }
 
                     box.addEventListener('click', function() {
-                        // 클릭 시 선택 날짜 변경
                         selectedDateStr = fullDateStr;
-                        renderWeek(centerDate); // 캘린더 다시 그림 (선택 효과 이동)
-                        renderReservationTable(selectedDateStr); // ★테이블 데이터 갱신 호출
+                        renderWeek(centerDate); 
+                        renderReservationTable(selectedDateStr);
                     });
 
                     let countNum = counts[fullDateStr] || 0;
@@ -303,18 +316,16 @@
                 });
             }
 
-            // --- [핵심 기능 2] 하단 테이블 리스트 불러오기 (새로 추가됨) ---
+            // --- 하단 테이블 리스트 불러오기 ---
             async function renderReservationTable(dateStr) {
-                // 1. 로딩 표시
                 reservationList.innerHTML = '<tr><td colspan="9" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 데이터를 불러오는 중...</td></tr>';
 
-                // 2. Supabase 데이터 조회 (해당 날짜의 예약 전체)
                 const { data: bookings, error } = await supabase
                     .from('bookings')
-                    .select('*') // 모든 컬럼 가져오기
-                    .gte('check_in', dateStr + ' 00:00:00') // 시작 시간
-                    .lte('check_in', dateStr + ' 23:59:59') // 종료 시간
-                    .order('created_at', { ascending: false }); // 최신 예약순
+                    .select('*')
+                    .gte('check_in', dateStr + ' 00:00:00')
+                    .lte('check_in', dateStr + ' 23:59:59')
+                    .order('created_at', { ascending: false });
 
                 if (error) {
                     console.error("테이블 조회 에러:", error);
@@ -322,39 +333,40 @@
                     return;
                 }
 
-                // 3. 데이터가 없을 경우
                 if (!bookings || bookings.length === 0) {
                     reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">해당 날짜에 예약 내역이 없습니다.</td></tr>';
                     tableSummary.innerText = `총 0개 | 매출액 0원`;
                     return;
                 }
 
-                // 4. 데이터가 있을 경우 테이블 행 생성
                 let html = '';
-                let totalAmount = 0; // 총 매출 계산용
+                let totalAmount = 0;
 
                 bookings.forEach(booking => {
-                    // 금액 합계 계산
                     const price = booking.total_price || 0;
                     totalAmount += price;
 
-                    // 상태 한글 변환
                     let statusBadge = booking.status;
                     if(statusBadge === 'confirmed') statusBadge = '<span style="color:#2ecc71; font-weight:bold;">예약확정</span>';
                     else statusBadge = '<span style="color:#95a5a6;">' + statusBadge + '</span>';
 
-                    // 날짜 포맷팅 (YYYY.MM.DD HH:mm)
                     const checkInDate = new Date(booking.check_in);
                     const checkOutDate = new Date(booking.check_out);
                     const createdDate = new Date(booking.created_at);
 
-                    // HTML 조립
+                    // --- [수정] 객실 ID를 실제 이름으로 변환 ---
+                    // roomMap에서 ID에 해당하는 이름을 찾고, 없으면 ID 그대로 표시
+                    const roomName = roomMap[booking.room_id] || `객실 ${booking.room_id}`; 
+
+                    // --- [수정] 틱톡 추가 ---
+                    // DB에 social_tiktok 컬럼이 있다고 가정
+                    
                     html += `
                         <tr>
                             <td><div class="request-text">${booking.guest_request || '-'}</div></td>
                             <td><strong>${booking.guest_name}</strong></td>
                             <td>
-                                <span class="room-type">객실 ${booking.room_id}</span>
+                                <span class="room-type">${roomName}</span>
                                 <span class="stay-info">숙박 / 1박</span>
                             </td>
                             <td>
@@ -376,6 +388,7 @@
                                     <div class="sns-item"><i class="fa-solid fa-phone"></i> ${booking.phone || '-'}</div>
                                     <div class="sns-item"><i class="fa-solid fa-envelope"></i> ${booking.guest_email || '-'}</div>
                                     <div class="sns-item"><i class="fa-brands fa-instagram"></i> ${booking.social_insta || '-'}</div>
+                                    <div class="sns-item"><i class="fa-brands fa-tiktok"></i> ${booking.social_tiktok || '-'}</div>
                                 </div>
                             </td>
                         </tr>
@@ -387,14 +400,14 @@
             }
 
             // --- 유틸리티 함수들 ---
-            function formatDate(date) { // YYYY-MM-DD
+            function formatDate(date) { 
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
                 const dd = String(date.getDate()).padStart(2, '0');
                 return `${yyyy}-${mm}-${dd}`;
             }
 
-            function formatDateDot(date) { // YYYY.MM.DD(요일)
+            function formatDateDot(date) { 
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
                 const dd = String(date.getDate()).padStart(2, '0');
@@ -402,7 +415,7 @@
                 return `${yyyy}.${mm}.${dd}(${dayName})`;
             }
 
-            function formatTime(date) { // HH:mm
+            function formatTime(date) {
                 const hh = String(date.getHours()).padStart(2, '0');
                 const mm = String(date.getMinutes()).padStart(2, '0');
                 return `${hh}:${mm}`;
