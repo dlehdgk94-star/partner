@@ -10,7 +10,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f5f7fa; color: #333; display: flex; min-height: 100vh; }
 
-        /* 사이드바 스타일 (기존 동일) */
+        /* 사이드바 스타일 */
         .sidebar { width: 240px; background-color: #ff6900; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
         .menu-list { list-style: none; margin-top: 10px; }
@@ -26,7 +26,7 @@
         /* 카드 공통 스타일 */
         .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* 주간 현황 스타일 (기존 동일) */
+        /* 주간 현황 스타일 */
         .weekly-status h3 { font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .date-container { display: flex; justify-content: space-between; gap: 10px; }
         .date-box { border: 1px solid #ddd; border-radius: 4px; padding: 15px 0; flex: 1; text-align: center; cursor: pointer; position: relative; }
@@ -35,7 +35,7 @@
         .date-box .count { font-size: 0.9rem; color: #ff6900; font-weight: bold; }
         .today-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background-color: #ff6900; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
 
-        /* 검색 필터 스타일 (기존 동일) */
+        /* 검색 필터 스타일 */
         .search-filter { border: 1px solid #eee; }
         .filter-summary { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 4px; }
         .status-tabs button { padding: 8px 16px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 0.9rem; margin-right: -1px; }
@@ -56,14 +56,13 @@
         .price-original { text-decoration: line-through; color: #999; font-size: 0.8rem; display: block;}
         .price-final { font-weight: bold; color: #333; }
         
-        /* [수정] 요청사항 텍스트 스타일 */
+        /* 요청사항 텍스트 스타일 */
         .request-text { font-size: 0.85rem; color: #555; text-align: left; max-width: 150px; line-height: 1.4; }
 
-        /* [수정] SNS 정보 스타일 (3칸) */
+        /* SNS 정보 스타일 */
         .sns-info { display: flex; flex-direction: column; gap: 4px; text-align: left; font-size: 0.8rem; color: #444; }
         .sns-item { display: flex; align-items: center; gap: 6px; }
         .sns-item i { width: 16px; text-align: center; color: #888; }
-        /* 아이콘 별 색상 포인트 */
         .fa-instagram { color: #E1306C !important; }
         .fa-tiktok { color: #000000 !important; }
         .fa-envelope { color: #ff6900 !important; }
@@ -131,7 +130,7 @@
 
             <div style="margin-top:20px;">
                 <div class="table-controls">
-                    <span class="summary-text">총 2개 (완료 2 / 취소 0) | 매출액 85,000원 | 입금 예정가 76,500원</span>
+                    <span class="summary-text">매출 요약 정보 (자동계산 예정)</span>
                     <select style="padding:4px;">
                         <option>입실일 내림차순</option>
                     </select>
@@ -152,64 +151,6 @@
                         </tr>
                     </thead>
                     <tbody id="reservation-list">
-                        <tr>
-                            <td><div class="request-text">조용한 방으로 부탁드립니다.</div></td>
-                            <td><strong>권품신</strong></td>
-                            <td>
-                                <span class="room-type">스탠다드</span>
-                                <span class="stay-info">숙박 / 1박</span>
-                            </td>
-                            <td>
-                                2025.12.02(화) 17:00<br>
-                                2025.12.03(수) 12:00
-                            </td>
-                            <td>
-                                2025.11.27(목)<br>
-                                <span style="font-size:0.8rem; color:#888;">미래예약</span>
-                            </td>
-                            <td>예약완료</td>
-                            <td>
-                                <span class="price-original">판매가 55,000원</span>
-                                <span class="price-final">입금예정가 49,500원</span>
-                            </td>
-                            <td><input type="checkbox" checked> 입실완료</td>
-                            <td>
-                                <div class="sns-info">
-                                    <div class="sns-item"><i class="fa-solid fa-envelope"></i> user1@naver.com</div>
-                                    <div class="sns-item"><i class="fa-brands fa-instagram"></i> @kwon_insta</div>
-                                    <div class="sns-item"><i class="fa-brands fa-tiktok"></i> @kwon_tik</div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><div class="request-text">전망 좋은 방 주세요.</div></td>
-                            <td><strong>유완규</strong></td>
-                            <td>
-                                <span class="room-type">럭셔리</span>
-                                <span class="stay-info">숙박 / 1박</span>
-                            </td>
-                            <td>
-                                2025.12.02(화) 10:30<br>
-                                2025.12.02(화) 14:30
-                            </td>
-                            <td>
-                                2025.12.02(화)<br>
-                                <span style="font-size:0.8rem; color:#888;">당일건</span>
-                            </td>
-                            <td>예약완료</td>
-                            <td>
-                                <span class="price-original">판매가 30,000원</span>
-                                <span class="price-final">입금예정가 27,000원</span>
-                            </td>
-                            <td><input type="checkbox"> 입실완료</td>
-                            <td>
-                                <div class="sns-info">
-                                    <div class="sns-item"><i class="fa-solid fa-envelope"></i> user2@gmail.com</div>
-                                    <div class="sns-item"><i class="fa-brands fa-instagram"></i> @yu_daily</div>
-                                    <div class="sns-item"><i class="fa-brands fa-tiktok"></i> -</div>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -221,5 +162,111 @@
             </div>
         </div>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // 1. Supabase 설정 (본인의 키 값으로 변경해주세요)
+        const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
+        const supabaseKey = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 2. 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchReservations();
+        });
+
+        // 3. 데이터 가져오기 (bookings 테이블 + rooms 테이블 조인)
+        async function fetchReservations() {
+            const { data: bookings, error } = await supabase
+                .from('bookings')
+                .select(`
+                    *,
+                    rooms ( name )
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('에러 발생:', error);
+                alert('데이터를 불러오지 못했습니다.');
+            } else {
+                renderTable(bookings);
+            }
+        }
+
+        // 4. 날짜 포맷 함수 (YYYY.MM.DD)
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}.${month}.${day}`;
+        }
+
+        // 5. 시간 포맷 함수 (HH:MM)
+        function formatTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toTimeString().substring(0, 5);
+        }
+
+        // 6. 금액 포맷 함수
+        function formatPrice(price) {
+            return price ? price.toLocaleString() + '원' : '0원';
+        }
+
+        // 7. 테이블 렌더링 함수
+        function renderTable(bookings) {
+            const tableBody = document.getElementById('reservation-list');
+            tableBody.innerHTML = ''; // 초기화
+
+            if (!bookings || bookings.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#666;">현재 예약 내역이 없습니다.</td></tr>';
+                return;
+            }
+
+            bookings.forEach(booking => {
+                // 데이터 가공
+                const roomName = booking.rooms ? booking.rooms.name : '객실정보 없음';
+                const requestText = booking.guest_request || '요청사항 없음';
+                const email = booking.guest_email || '-';
+                const insta = booking.social_insta ? `@${booking.social_insta}` : '-';
+                const tiktok = booking.social_tiktok ? `@${booking.social_tiktok}` : '-';
+                const status = booking.status || '예약완료';
+
+                const row = `
+                    <tr>
+                        <td><div class="request-text">${requestText}</div></td>
+                        <td><strong>${booking.guest_name}</strong></td>
+                        <td>
+                            <span class="room-type">${roomName}</span>
+                            <span class="stay-info">숙박</span>
+                        </td>
+                        <td>
+                            ${formatDate(booking.check_in)} 15:00<br>
+                            ${formatDate(booking.check_out)} 11:00
+                        </td>
+                        <td>
+                            ${formatDate(booking.created_at)}<br>
+                            <span style="font-size:0.8rem; color:#888;">${formatTime(booking.created_at)}</span>
+                        </td>
+                        <td>${status}</td>
+                        <td>
+                            <span class="price-final">${formatPrice(booking.total_price)}</span>
+                        </td>
+                        <td><input type="checkbox"> 입실완료</td>
+                        <td>
+                            <div class="sns-info">
+                                <div class="sns-item"><i class="fa-solid fa-envelope"></i> ${email}</div>
+                                <div class="sns-item"><i class="fa-brands fa-instagram"></i> ${insta}</div>
+                                <div class="sns-item"><i class="fa-brands fa-tiktok"></i> ${tiktok}</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+    </script>
 </body>
 </html>
