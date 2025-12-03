@@ -30,6 +30,26 @@
         .weekly-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .weekly-header h3 { font-size: 1rem; display: flex; align-items: center; gap: 8px; margin: 0; }
         
+        /* [추가] 오늘 버튼 스타일 */
+        .btn-today {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            margin-left: 5px; /* 아이콘과의 간격 */
+            margin-right: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .btn-today:hover {
+            background-color: #f0f0f0;
+            border-color: #999;
+            color: #ff6900;
+        }
+
         /* 날짜 이동 컨트롤러 */
         .date-slider-wrapper { display: flex; align-items: center; gap: 10px; }
         .nav-btn {
@@ -58,11 +78,11 @@
             display: none; /* JS로 제어 */
         }
         .date-box.is-today .today-badge { display: block; }
-        .date-box.is-today { border-color: #ff6900; } /* 오늘 날짜는 기본적으로 테두리 강조 */
+        .date-box.is-today { border-color: #ff6900; } 
 
-        /* 숨겨진 날짜 입력창 (아이콘 클릭 시 트리거) */
+        /* 숨겨진 날짜 입력창 */
         #datePickerInput { visibility: hidden; position: absolute; width: 0; height: 0; }
-        .calendar-trigger { cursor: pointer; color: #666; transition: 0.2s; }
+        .calendar-trigger { cursor: pointer; color: #666; transition: 0.2s; margin-left: 5px; }
         .calendar-trigger:hover { color: #ff6900; }
 
         /* 2. 검색 및 필터 */
@@ -83,7 +103,6 @@
         .btn-detail { border: 1px solid #ccc; background: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
         .room-type { font-weight: bold; display: block; }
         .stay-info { font-size: 0.8rem; color: #ff6900; }
-        .price-original { text-decoration: line-through; color: #999; font-size: 0.8rem; display: block;}
         .price-final { font-weight: bold; color: #333; }
         .btn-action { border: 1px solid #ccc; background: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-bottom: 4px; font-size: 0.8rem; width: 100%; }
 
@@ -111,6 +130,9 @@
             <div class="weekly-header">
                 <h3>
                     <i class="fa-solid fa-bullhorn"></i> 1주일 간의 입실 현황
+                    
+                    <button id="todayBtn" class="btn-today">오늘</button>
+                    
                     <label for="datePickerInput" class="calendar-trigger" title="특정 날짜로 이동">
                         <i class="fa-regular fa-calendar-days"></i>
                     </label>
@@ -196,6 +218,7 @@
         const nextBtn = document.getElementById('nextDayBtn');
         const datePicker = document.getElementById('datePickerInput');
         const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+        const todayBtn = document.getElementById('todayBtn'); // [추가] 오늘 버튼 선택
 
         // 현재 기준 시작 날짜 (초기값: 오늘 기준 3일 전부터 시작해서 오늘이 가운데 오도록)
         let currentStartDate = new Date();
@@ -250,8 +273,7 @@
                 // 오늘 배지 (오늘 날짜인 경우만)
                 const badge = isSameDate(renderDate, today) ? `<div class="today-badge">오늘</div>` : '';
 
-                // 랜덤 예약 건수 (데모용, 실제로는 서버 데이터 필요)
-                // 0~15 사이의 랜덤 숫자 생성
+                // 랜덤 예약 건수 (데모용)
                 const randomCount = Math.floor(Math.random() * 15);
 
                 box.innerHTML = `
@@ -272,24 +294,34 @@
 
         // 버튼 이벤트 리스너
         prevBtn.addEventListener('click', () => {
-            // 하루 전으로 이동 (1주일씩 이동하고 싶으면 -7로 변경)
             currentStartDate.setDate(currentStartDate.getDate() - 1);
             renderCalendar();
         });
 
         nextBtn.addEventListener('click', () => {
-            // 하루 후로 이동
             currentStartDate.setDate(currentStartDate.getDate() + 1);
             renderCalendar();
         });
 
-        // Date Picker (달력 아이콘) 변경 시 이벤트
+        // [추가] 오늘 버튼 클릭 이벤트
+        todayBtn.addEventListener('click', () => {
+            const now = new Date();
+            selectedDate = new Date(now); // 선택 날짜를 오늘로
+            
+            // 캘린더 시작점을 오늘이 가운데 오도록 재설정
+            currentStartDate = new Date(now);
+            currentStartDate.setDate(currentStartDate.getDate() - 3);
+            
+            renderCalendar(); // 화면 갱신
+        });
+
+        // Date Picker 변경 시 이벤트
         datePicker.addEventListener('change', (e) => {
             if(e.target.value) {
                 const newDate = new Date(e.target.value);
                 selectedDate = new Date(newDate); // 선택된 날짜 변경
                 
-                // 캘린더 시작점을 선택된 날짜가 가운데 오도록 조정 (3일 전으로 설정)
+                // 캘린더 시작점을 선택된 날짜가 가운데 오도록 조정
                 currentStartDate = new Date(newDate);
                 currentStartDate.setDate(currentStartDate.getDate() - 3);
                 
