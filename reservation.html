@@ -158,9 +158,9 @@
 
              <div class="filter-summary">
                 <div class="status-tabs">
-                    <button class="active">입실 상태 전체</button>
-                    <button>입실 전만 보기</button>
-                    <button>입실 완료만 보기</button>
+                    <button class="active">예약 상태 전체</button>
+                    <button>확정된 예약</button>
+                    <button>취소된 예약</button>
                 </div>
             </div>
 
@@ -348,19 +348,37 @@
 
                 if (!bookings || bookings.length === 0) {
                     reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">해당 날짜에 예약 내역이 없습니다.</td></tr>';
-                    tableSummary.innerText = `총 0개 | 매출액 0원`;
+                    tableSummary.innerText = `총 0개 (완료 0 / 취소 0) | 매출액 0원 | 입금 예정가 0원`;
                     return;
                 }
 
                 let html = '';
-                let totalAmount = 0;
+                
+                // [요청 반영] 상단 요약 텍스트 계산 변수들
+                let totalCount = bookings.length;
+                let completedCount = 0; // 예약확정 수
+                let cancelledCount = 0; // 취소 수
+                let totalRevenue = 0; // 매출액
 
                 bookings.forEach(booking => {
+                    // 카운트 계산
+                    if (booking.status === 'confirmed' || booking.status === '예약확정') {
+                        completedCount++;
+                        // 매출액은 '확정'된 건에 대해서만 더한다고 가정 (혹은 전체 다 더할 수도 있음)
+                        totalRevenue += (booking.total_price || 0);
+                    } else if (booking.status === 'cancelled' || booking.status === '취소') {
+                        cancelledCount++;
+                    } else {
+                        // 그 외 상태도 일단 매출에 포함하거나 제외 (여기서는 confirmed만 매출로 잡음)
+                        // totalRevenue += (booking.total_price || 0); 
+                    }
+
+                    // 금액 표시용 변수 (개별 행)
                     const price = booking.total_price || 0;
-                    totalAmount += price;
 
                     let statusBadge = booking.status;
                     if(statusBadge === 'confirmed') statusBadge = '<span style="color:#2ecc71; font-weight:bold;">예약확정</span>';
+                    else if(statusBadge === 'cancelled') statusBadge = '<span style="color:#e74c3c; font-weight:bold;">취소</span>';
                     else statusBadge = '<span style="color:#95a5a6;">' + statusBadge + '</span>';
 
                     const checkInDate = new Date(booking.check_in);
@@ -375,7 +393,6 @@
                         if (Array.isArray(booking.selected_options) && booking.selected_options.length > 0) {
                             optionsHtml = `<div class="option-wrapper">`;
                             booking.selected_options.forEach(opt => {
-                                // 앞의 [A1] 같은 코드만 작게, 뒤는 일반 글씨로 보이게 처리할 수도 있음 (여기선 단순히 출력)
                                 optionsHtml += `<span class="option-badge">${opt}</span>`;
                             });
                             optionsHtml += `</div>`;
@@ -383,7 +400,6 @@
                     }
 
                     // --- [테이블 구성] ---
-                    // "입실 상태" 컬럼을 제거하고 "선택 옵션" 컬럼에 optionsHtml을 넣음
                     html += `
                         <tr>
                             <td><div class="request-text">${booking.guest_request || '-'}</div></td>
@@ -421,7 +437,10 @@
                 });
 
                 reservationList.innerHTML = html;
-                tableSummary.innerText = `총 ${bookings.length}개 | 매출액 ${totalAmount.toLocaleString()}원`;
+                
+                // [요청 반영] 상단 요약 텍스트 업데이트
+                // "입금 예정가"는 아직 데이터가 없으므로 0원으로 표시
+                tableSummary.innerText = `총 ${totalCount}개 (완료 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원 | 입금 예정가 0원`;
             }
 
             // --- 유틸리티 함수들 ---
