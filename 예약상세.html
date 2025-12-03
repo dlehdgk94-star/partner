@@ -34,8 +34,8 @@
         .btn-today { background-color: #ff6900; color: white; border: 1px solid #ff6900; font-weight: bold; }
         .btn-today:hover { background-color: #e65c00; }
 
-        /* 날짜 컨테이너 (슬라이더 영역) */
-        .calendar-wrapper { display: flex; align-items: center; gap: 10px; }
+        /* 날짜 컨테이너 (슬라이더 영역) - 수정됨 */
+        .calendar-wrapper { display: flex; align-items: center; gap: 10px; padding-top: 10px; /* 배지 공간 확보 */ }
         .date-container { display: flex; justify-content: space-between; gap: 10px; flex-grow: 1; overflow: hidden; }
         
         .date-box { 
@@ -47,24 +47,50 @@
             cursor: pointer; 
             position: relative; 
             transition: all 0.2s;
-            min-width: 0; /* flex 자식 요소 줄어듦 방지 */
+            background-color: #fff;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 85px; /* 높이 고정 */
         }
-        .date-box:hover { background-color: #fafafa; border-color: #ccc; }
-        .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; color: #ff6900; }
-        .date-box .year-month { font-size: 0.75rem; color: #888; margin-bottom: 5px; }
-        .date-box .day-num { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .date-box.active .day-num { color: #ff6900; }
-        .date-box .day-text { font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; color: #555; }
-        
-        /* 토요일/일요일 색상 */
-        .date-box.sat .day-text, .date-box.sat .day-num { color: #3b5bdb; }
-        .date-box.sun .day-text, .date-box.sun .day-num { color: #e03131; }
 
-        .date-box .count { font-size: 0.85rem; color: #ff6900; font-weight: bold; }
+        .date-box:hover { background-color: #fafafa; border-color: #ccc; }
+        
+        /* 선택된 날짜 스타일 (이미지처럼 주황 테두리 + 연한 배경) */
+        .date-box.active { border: 2px solid #ff6900; background-color: #fff0e6; color: #333; }
+        
+        /* 날짜 텍스트 (예: 2025.12.02 (화)) */
+        .date-box .date-title { 
+            font-size: 0.95rem; 
+            font-weight: bold; 
+            color: #333; 
+            margin-bottom: 6px; 
+        }
+        .date-box.active .date-title { color: #333; } /* 선택시 텍스트 색상 유지 */
+
+        /* 숙박 건수 텍스트 */
+        .date-box .stay-count { 
+            font-size: 0.9rem; 
+            color: #ff6900; 
+            font-weight: bold; 
+        }
+
+        /* 오늘 배지 (박스 상단에 걸치도록) */
         .today-badge { 
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%); 
-            background-color: #ff6900; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; 
+            position: absolute; 
+            top: -10px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background-color: #ff6900; 
+            color: white; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            padding: 2px 8px; 
+            border-radius: 12px; 
             display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .date-box.is-today .today-badge { display: block; }
 
@@ -222,7 +248,7 @@
             }
         }
 
-        // 5. 날짜 슬라이더(캘린더) 렌더링 함수
+        // 5. 날짜 슬라이더(캘린더) 렌더링 함수 - 수정됨
         function renderCalendar() {
             const container = document.getElementById('date-slider');
             container.innerHTML = ''; // 초기화
@@ -239,17 +265,14 @@
                 // 날짜 포맷 (YYYY-MM-DD) - 데이터 비교용
                 const dateStr = toYMD(tempDate);
                 
-                // 화면 표시용 (YYYY.MM), (DD), (요일)
-                const yearMonth = `${tempDate.getFullYear()}.${String(tempDate.getMonth()+1).padStart(2,'0')}`;
-                const dayNum = String(tempDate.getDate()).padStart(2, '0');
-                
+                // 화면 표시용: 2025.12.02 (화) 형식 조합
+                const year = tempDate.getFullYear();
+                const month = String(tempDate.getMonth()+1).padStart(2,'0');
+                const day = String(tempDate.getDate()).padStart(2,'0');
                 const days = ['일', '월', '화', '수', '목', '금', '토'];
                 const dayLabel = days[tempDate.getDay()];
                 
-                // 요일별 클래스 (토, 일)
-                let dayClass = '';
-                if (tempDate.getDay() === 0) dayClass = 'sun';
-                if (tempDate.getDay() === 6) dayClass = 'sat';
+                const dateDisplayText = `${year}.${month}.${day} (${dayLabel})`;
 
                 // 오늘인지 확인
                 const isToday = tempDate.getTime() === today.getTime();
@@ -262,15 +285,13 @@
 
                 // HTML 생성
                 const div = document.createElement('div');
-                div.className = `date-box ${dayClass} ${isActive ? 'active' : ''} ${isToday ? 'is-today' : ''}`;
+                div.className = `date-box ${isActive ? 'active' : ''} ${isToday ? 'is-today' : ''}`;
                 div.onclick = () => selectDate(tempDate); // 클릭 시 이벤트 연결
 
                 div.innerHTML = `
                     <div class="today-badge">오늘</div>
-                    <div class="year-month">${yearMonth}</div>
-                    <div class="day-num">${dayNum}</div>
-                    <div class="day-text">${dayLabel}</div>
-                    <div class="count">숙박 ${count}</div>
+                    <div class="date-title">${dateDisplayText}</div>
+                    <div class="stay-count">숙박 ${count}</div>
                 `;
 
                 container.appendChild(div);
