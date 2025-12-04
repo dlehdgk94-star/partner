@@ -11,8 +11,8 @@
     
     <style>
         /* ====================
-           레이아웃 (Layout)
-           ==================== */
+            레이아웃 (Layout)
+            ==================== */
         * { box-sizing: border-box; }
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
@@ -26,7 +26,7 @@
         /* 1. 좌측 사이드바 디자인 수정 */
         .sidebar {
             width: 250px;
-            background-color: #FF5000; /* 이미지의 밝은 주황색 */
+            background-color: #ff6900; /* [수정] 요청하신 색상으로 변경 */
             color: white;
             display: flex;
             flex-direction: column;
@@ -36,7 +36,7 @@
         .logo-area {
             padding: 25px 20px;
             font-size: 20px;
-            font-weight: 800; /* 폰트 두께 강화 */
+            font-weight: 800; 
             border-bottom: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 0;
             display: flex;
@@ -74,12 +74,12 @@
             background-color: rgba(0,0,0,0.1); 
         }
 
-        /* 선택된 메뉴 (Active) 스타일 - 이미지와 동일하게 구현 */
+        /* 선택된 메뉴 (Active) 스타일 */
         .menu-item.active { 
-            background-color: #B02E0C; /* 이미지의 진한 갈색/주황색 톤 */
+            background-color: #cc5200; /* [수정] 메인 색상(#ff6900)보다 약간 진한 톤으로 자연스럽게 변경 */
             color: white; 
             font-weight: 700;
-            border-left: none; /* 기존 흰색 선 제거 */
+            border-left: none; 
         }
 
         /* 2. 우측 메인 컨텐츠 */
@@ -109,8 +109,8 @@
         }
 
         /* ====================
-           캘린더 디자인
-           ==================== */
+            캘린더 디자인
+            ==================== */
         #calendar {
             background: white;
             padding: 20px;
@@ -149,7 +149,7 @@
         .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; margin-bottom: 4px; }
         .badge-selling { background-color: #66bb6a; }
         .badge-soldout { background-color: #bdbdbd; }
-        .badge-custom { background-color: #FF5000; } 
+        .badge-custom { background-color: #ff6900; } /* [수정] 뱃지 색상 통일 */
 
         .room-name { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .room-price { display: block; font-size: 12px; color: #555; text-align: right; }
@@ -322,8 +322,8 @@
                                     </div>
 
                                     <div style="display:flex; align-items:center;">
-                                        <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''} style="transform: scale(1.5); margin-right: 8px; accent-color: #FF5000;">
-                                        <label for="swal-custom" style="color:#FF5000; font-weight:bold;">🏷️ 특가 표시</label>
+                                        <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''} style="transform: scale(1.5); margin-right: 8px; accent-color: #ff6900;">
+                                        <label for="swal-custom" style="color:#ff6900; font-weight:bold;">🏷️ 특가 표시</label>
                                     </div>
                                 </div>
                             </div>
@@ -331,7 +331,7 @@
                         showCancelButton: true,
                         confirmButtonText: '저장하기',
                         cancelButtonText: '취소',
-                        confirmButtonColor: '#FF5000',
+                        confirmButtonColor: '#ff6900', // [수정] 버튼 색상 통일
                         
                         preConfirm: async () => {
                             const newPrice = document.getElementById('swal-price').value;
