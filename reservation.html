@@ -220,9 +220,9 @@
                             <th style="width: 15%;">입실/퇴실일시</th>
                             <th style="width: 10%;">예약일시</th>
                             <th style="width: 8%;">예약상태</th>
-                            <th style="width: 15%;">판매가 및 입금가</th>
-                            <th style="width: 12%;">옵션 (조식 등)</th>
-                            <th style="width: 15%;">입실정보 (연락처)</th>
+                            <th style="width: 15%;">금액 및 할인정보</th>
+                            <th style="width: 12%;">선택 옵션 (조식 등)</th>
+                            <th style="width: 15%;">입실 정보 (연락처)</th>
                         </tr>
                     </thead>
                     <tbody id="reservation-list">
@@ -536,6 +536,14 @@
 
                     const roomName = roomMap[booking.room_id] || `객실 ${booking.room_id}`; 
                     
+                    const checkInDate = new Date(booking.check_in);
+                    const checkOutDate = new Date(booking.check_out);
+                    const createdDate = new Date(booking.created_at);
+
+                    // [수정됨] 박수 계산 (체크아웃 - 체크인)
+                    const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+                    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24)); // 일수 계산
+
                     // 옵션 HTML
                     let optionsHtml = '<span style="color:#ccc; font-size:0.8rem;">선택안함</span>';
                     if (booking.selected_options) {
@@ -554,15 +562,15 @@
                             <td><strong>${booking.guest_name}</strong></td>
                             <td>
                                 <span class="room-type">${roomName}</span>
-                                <span class="stay-info">숙박</span>
+                                <span class="stay-info">숙박 / ${nights}박</span>
                             </td>
                             <td>
-                                ${formatDateDot(new Date(booking.check_in))} 15:00<br>
-                                ${formatDateDot(new Date(booking.check_out))} 11:00
+                                ${formatDateDot(checkInDate)} 15:00<br>
+                                ${formatDateDot(checkOutDate)} 12:00
                             </td>
                             <td>
-                                ${formatDateDot(new Date(booking.created_at))}<br>
-                                <span style="font-size:0.8rem; color:#888;">${formatTime(new Date(booking.created_at))}</span>
+                                ${formatDateDot(createdDate)}<br>
+                                <span style="font-size:0.8rem; color:#888;">${formatTime(createdDate)}</span>
                             </td>
                             <td>
                                 ${statusBadge}
