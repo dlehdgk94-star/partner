@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 스타일은 기존과 동일 */
+        /* --- 기본 스타일 (변경 없음) --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f5f7fa; color: #333; display: flex; min-height: 100vh; }
 
@@ -24,6 +24,7 @@
 
         .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
+        /* 캘린더 스타일 */
         .weekly-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .weekly-title { font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         
@@ -53,6 +54,7 @@
         .today-badge { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); background-color: #ff6900; color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; display: none; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: bold; }
         .date-box.is-today .today-badge { display: block; }
 
+        /* 검색 필터 및 테이블 스타일 */
         .search-filter { border: 1px solid #eee; }
         .filter-summary { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 4px; }
         .status-tabs button { padding: 8px 16px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 0.9rem; margin-right: -1px; }
@@ -79,7 +81,6 @@
         .fa-tiktok { color: #000000 !important; }
         .fa-envelope { color: #ff6900 !important; }
 
-        /* 옵션 표시 스타일 */
         .option-badge { 
             display: inline-block; 
             background: #fff0e6; 
@@ -94,8 +95,6 @@
             width: 100%;
         }
         .option-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-
-        /* 로딩 애니메이션 */
         .loading-spinner { text-align: center; padding: 20px; color: #888; }
     </style>
 </head>
@@ -130,7 +129,7 @@
             </div>
 
             <p style="font-size: 0.85rem; color:#666; margin-bottom:15px;">
-                화살표를 눌러 이전/다음 날짜를 계속 확인할 수 있습니다.
+                화살표를 눌러 이전/다음 날짜를 계속 확인할 수 있습니다. 날짜를 클릭하면 아래 목록이 갱신됩니다.
             </p>
             
             <div class="slider-wrapper">
@@ -152,8 +151,31 @@
             </div>
             
             <div class="filter-box" style="border-top:1px solid #eee; padding-top:15px;">
-                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">기간 설정 조건</p>
-                <p style="font-size:0.9rem; color:#555;" id="selected-period-text">날짜를 선택해주세요</p>
+                <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                    
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color:#555;">조회 기간 (체크인 기준)</label>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <input type="date" id="search-start-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <span style="color:#888;">~</span>
+                            <input type="date" id="search-end-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color:#555;">예약자 검색</label>
+                        <input type="text" id="search-keyword" placeholder="예약자 이름" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 180px;">
+                    </div>
+
+                    <div style="display:flex; gap: 5px;">
+                        <button id="btn-search-apply" style="padding: 8px 20px; background-color: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                            검색하기
+                        </button>
+                        <button id="btn-search-reset" style="padding: 8px 15px; background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">
+                            초기화
+                        </button>
+                    </div>
+                </div>
             </div>
 
              <div class="filter-summary">
@@ -208,12 +230,18 @@
         const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
 
         document.addEventListener('DOMContentLoaded', async function() {
+            // --- DOM 요소들 ---
             const dateTrack = document.getElementById('date-track');
             const datePickerInput = document.getElementById('date-picker-input');
-            const btnToday = document.getElementById('btn-today');
-            const btnPrev = document.getElementById('btn-prev');
-            const btnNext = document.getElementById('btn-next');
-            const periodText = document.getElementById('selected-period-text');
+            
+            // 검색 필터 요소들
+            const searchStartDate = document.getElementById('search-start-date');
+            const searchEndDate = document.getElementById('search-end-date');
+            const searchKeyword = document.getElementById('search-keyword');
+            const btnSearchApply = document.getElementById('btn-search-apply');
+            const btnSearchReset = document.getElementById('btn-search-reset');
+            
+            // 결과 테이블 요소
             const reservationList = document.getElementById('reservation-list');
             const tableSummary = document.getElementById('table-summary');
 
@@ -222,56 +250,104 @@
             async function fetchRoomNames() {
                 const { data: rooms, error } = await supabase.from('rooms').select('id, name');
                 if(rooms) {
-                    rooms.forEach(r => {
-                        roomMap[r.id] = r.name; 
-                    });
+                    rooms.forEach(r => roomMap[r.id] = r.name);
                 }
             }
             await fetchRoomNames(); 
             // ------------------------------------
 
+            // 초기 기준 날짜 (오늘)
             let centerDate = new Date(); 
-            let selectedDateStr = formatDate(centerDate); 
+            const todayStr = formatDate(new Date());
 
-            // 초기 실행
+            // 1. 초기 셋팅: 오늘 날짜로 검색 기간 설정
+            searchStartDate.value = todayStr;
+            searchEndDate.value = todayStr;
+
+            // 2. 초기 렌더링
             renderWeek(centerDate);
-            renderReservationTable(selectedDateStr);
+            fetchReservations({ startDate: todayStr, endDate: todayStr });
 
-            // 이벤트 리스너
-            btnToday.addEventListener('click', function() {
+
+            // --- [이벤트 리스너 등록] ---
+
+            // [상단 캘린더] '오늘' 버튼
+            document.getElementById('btn-today').addEventListener('click', function() {
                 const today = new Date();
                 centerDate = new Date(today);
-                selectedDateStr = formatDate(today);
                 renderWeek(centerDate);
-                renderReservationTable(selectedDateStr);
+                
+                // 검색창도 오늘로 초기화 및 조회
+                setSearchInputs(today, today);
+                fetchReservations({ startDate: formatDate(today), endDate: formatDate(today) });
             });
 
+            // [상단 캘린더] 달력 아이콘으로 날짜 이동
             datePickerInput.addEventListener('change', function(e) {
                 if(e.target.value) {
                     const pickedDate = new Date(e.target.value);
                     centerDate = new Date(pickedDate);
-                    selectedDateStr = formatDate(pickedDate);
                     renderWeek(centerDate);
-                    renderReservationTable(selectedDateStr);
+
+                    setSearchInputs(pickedDate, pickedDate);
+                    fetchReservations({ startDate: formatDate(pickedDate), endDate: formatDate(pickedDate) });
                 }
             });
 
-            btnPrev.addEventListener('click', function() {
+            // [상단 캘린더] 좌우 화살표
+            document.getElementById('btn-prev').addEventListener('click', function() {
                 centerDate.setDate(centerDate.getDate() - 1);
                 renderWeek(centerDate);
             });
-
-            btnNext.addEventListener('click', function() {
+            document.getElementById('btn-next').addEventListener('click', function() {
                 centerDate.setDate(centerDate.getDate() + 1);
                 renderWeek(centerDate);
             });
 
-            // --- 캘린더 그리기 ---
+            // [상세 검색] 검색하기 버튼 클릭
+            btnSearchApply.addEventListener('click', function() {
+                const start = searchStartDate.value;
+                const end = searchEndDate.value;
+                const keyword = searchKeyword.value.trim();
+
+                if(!start || !end) {
+                    alert("조회 기간을 선택해주세요.");
+                    return;
+                }
+                if(start > end) {
+                    alert("시작일이 종료일보다 늦을 수 없습니다.");
+                    return;
+                }
+
+                // 기간 + 이름 검색 실행
+                fetchReservations({ 
+                    startDate: start, 
+                    endDate: end, 
+                    keyword: keyword 
+                });
+            });
+
+            // [상세 검색] 초기화 버튼 클릭
+            btnSearchReset.addEventListener('click', function() {
+                searchKeyword.value = '';
+                const today = new Date();
+                
+                // 날짜와 검색어 모두 초기화
+                setSearchInputs(today, today);
+                centerDate = new Date(today);
+                renderWeek(centerDate);
+                
+                // 오늘 데이터 조회
+                fetchReservations({ startDate: formatDate(today), endDate: formatDate(today) });
+            });
+
+
+            // --- [기능 함수] 1. 상단 캘린더 그리기 ---
             async function renderWeek(pivotDate) {
                 dateTrack.innerHTML = ''; 
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-                const todayStr = formatDate(new Date());
-
+                
+                // 현재 기준일의 앞뒤 3일 계산
                 const datesToShow = [];
                 for (let i = -3; i <= 3; i++) {
                     const tempDate = new Date(pivotDate);
@@ -279,10 +355,11 @@
                     datesToShow.push(tempDate);
                 }
 
+                // 해당 주간의 예약 건수만 가져오기 (성능 최적화)
                 const startDateStr = formatDate(datesToShow[0]);
                 const endDateStr = formatDate(datesToShow[datesToShow.length - 1]);
 
-                const { data: bookings, error } = await supabase
+                const { data: bookings } = await supabase
                     .from('bookings')
                     .select('check_in') 
                     .gte('check_in', startDateStr + ' 00:00:00')
@@ -306,17 +383,22 @@
 
                     const box = document.createElement('div');
                     box.className = 'date-box';
-
                     if (fullDateStr === todayStr) box.classList.add('is-today');
-                    if (fullDateStr === selectedDateStr) {
+                    
+                    // 현재 검색조건이 '하루'이고 그 날짜와 같다면 active 표시
+                    const currentStart = searchStartDate.value;
+                    const currentEnd = searchEndDate.value;
+                    if (fullDateStr === currentStart && currentStart === currentEnd) {
                         box.classList.add('active');
-                        updatePeriodText(dateString, dayName);
                     }
 
+                    // 날짜 박스 클릭 이벤트
                     box.addEventListener('click', function() {
-                        selectedDateStr = fullDateStr;
-                        renderWeek(centerDate); 
-                        renderReservationTable(selectedDateStr);
+                        centerDate = new Date(dateObj); 
+                        renderWeek(centerDate); // 캘린더 다시 그려서 active 갱신
+                        
+                        setSearchInputs(dateObj, dateObj); // 하단 검색창 날짜 동기화
+                        fetchReservations({ startDate: fullDateStr, endDate: fullDateStr }); // 데이터 조회
                     });
 
                     let countNum = counts[fullDateStr] || 0;
@@ -329,65 +411,73 @@
                 });
             }
 
-            // --- 하단 테이블 리스트 불러오기 (옵션 및 금액 수정) ---
-            async function renderReservationTable(dateStr) {
+            // --- [기능 함수] 2. 예약 내역 조회 (기간 + 검색어) ---
+            async function fetchReservations(params) {
                 reservationList.innerHTML = '<tr><td colspan="9" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 데이터를 불러오는 중...</td></tr>';
 
-                const { data: bookings, error } = await supabase
+                // 기본 쿼리: 기간 검색
+                let query = supabase
                     .from('bookings')
                     .select('*')
-                    .gte('check_in', dateStr + ' 00:00:00')
-                    .lte('check_in', dateStr + ' 23:59:59')
+                    .gte('check_in', params.startDate + ' 00:00:00')
+                    .lte('check_in', params.endDate + ' 23:59:59')
                     .order('created_at', { ascending: false });
+
+                // 이름 검색어가 있다면 조건 추가
+                if (params.keyword) {
+                    query = query.ilike('guest_name', `%${params.keyword}%`);
+                }
+
+                const { data: bookings, error } = await query;
 
                 if (error) {
                     console.error("테이블 조회 에러:", error);
-                    reservationList.innerHTML = '<tr><td colspan="9">데이터를 불러오는데 실패했습니다.</td></tr>';
+                    reservationList.innerHTML = '<tr><td colspan="9">데이터 조회 실패</td></tr>';
                     return;
                 }
 
+                renderTableRows(bookings, params);
+            }
+
+            // --- [기능 함수] 3. 테이블 HTML 렌더링 ---
+            function renderTableRows(bookings, params) {
                 if (!bookings || bookings.length === 0) {
-                    reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">해당 날짜에 예약 내역이 없습니다.</td></tr>';
-                    tableSummary.innerText = `총 0개 (완료 0 / 취소 0) | 매출액 0원 | 입금 예정가 0원`;
+                    reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">조건에 맞는 예약 내역이 없습니다.</td></tr>';
+                    
+                    let periodMsg = `${params.startDate} ~ ${params.endDate}`;
+                    if (params.keyword) periodMsg += ` (이름: ${params.keyword})`;
+                    tableSummary.innerText = `[${periodMsg}] 조회 결과: 0건`;
                     return;
                 }
 
                 let html = '';
-                
-                // [요청 반영] 상단 요약 텍스트 계산 변수들
                 let totalCount = bookings.length;
-                let completedCount = 0; // 예약확정 수
-                let cancelledCount = 0; // 취소 수
-                let totalRevenue = 0; // 매출액
+                let completedCount = 0;
+                let cancelledCount = 0;
+                let totalRevenue = 0;
 
                 bookings.forEach(booking => {
-                    // 카운트 계산
+                    // 통계 계산
                     if (booking.status === 'confirmed' || booking.status === '예약확정') {
                         completedCount++;
-                        // 매출액은 '확정'된 건에 대해서만 더한다고 가정 (혹은 전체 다 더할 수도 있음)
                         totalRevenue += (booking.total_price || 0);
                     } else if (booking.status === 'cancelled' || booking.status === '취소') {
                         cancelledCount++;
-                    } else {
-                        // 그 외 상태도 일단 매출에 포함하거나 제외 (여기서는 confirmed만 매출로 잡음)
-                        // totalRevenue += (booking.total_price || 0); 
                     }
 
-                    // 금액 표시용 변수 (개별 행)
-                    const price = booking.total_price || 0;
-
+                    // 상태 뱃지 HTML
                     let statusBadge = booking.status;
                     if(statusBadge === 'confirmed') statusBadge = '<span style="color:#2ecc71; font-weight:bold;">예약확정</span>';
                     else if(statusBadge === 'cancelled') statusBadge = '<span style="color:#e74c3c; font-weight:bold;">취소</span>';
                     else statusBadge = '<span style="color:#95a5a6;">' + statusBadge + '</span>';
 
+                    const roomName = roomMap[booking.room_id] || `객실 ${booking.room_id}`; 
+                    
                     const checkInDate = new Date(booking.check_in);
                     const checkOutDate = new Date(booking.check_out);
                     const createdDate = new Date(booking.created_at);
-                    
-                    const roomName = roomMap[booking.room_id] || `객실 ${booking.room_id}`; 
 
-                    // --- [옵션 데이터 파싱] ---
+                    // 옵션 HTML
                     let optionsHtml = '<span style="color:#ccc; font-size:0.8rem;">선택안함</span>';
                     if (booking.selected_options) {
                         if (Array.isArray(booking.selected_options) && booking.selected_options.length > 0) {
@@ -399,14 +489,13 @@
                         }
                     }
 
-                    // --- [테이블 구성] ---
                     html += `
                         <tr>
                             <td><div class="request-text">${booking.guest_request || '-'}</div></td>
                             <td><strong>${booking.guest_name}</strong></td>
                             <td>
                                 <span class="room-type">${roomName}</span>
-                                <span class="stay-info">숙박 / 1박</span>
+                                <span class="stay-info">숙박</span>
                             </td>
                             <td>
                                 ${formatDateDot(checkInDate)} 15:00<br>
@@ -419,7 +508,7 @@
                             <td>${statusBadge}</td>
                             <td>
                                 <span class="price-original">객실가 ${Number(booking.room_price).toLocaleString()}원</span>
-                                <span class="price-final">총 결제금액 ${Number(booking.total_price).toLocaleString()}원</span>
+                                <span class="price-final">총 ${Number(booking.total_price).toLocaleString()}원</span>
                             </td>
                             <td style="vertical-align: top; padding-top:20px;">
                                 ${optionsHtml}
@@ -429,7 +518,6 @@
                                     <div class="sns-item"><i class="fa-solid fa-phone"></i> ${booking.phone || '-'}</div>
                                     <div class="sns-item"><i class="fa-solid fa-envelope"></i> ${booking.guest_email || '-'}</div>
                                     <div class="sns-item"><i class="fa-brands fa-instagram"></i> ${booking.social_insta || '-'}</div>
-                                    <div class="sns-item"><i class="fa-brands fa-tiktok"></i> ${booking.social_tiktok || '-'}</div>
                                 </div>
                             </td>
                         </tr>
@@ -438,9 +526,11 @@
 
                 reservationList.innerHTML = html;
                 
-                // [요청 반영] 상단 요약 텍스트 업데이트
-                // "입금 예정가"는 아직 데이터가 없으므로 0원으로 표시
-                tableSummary.innerText = `총 ${totalCount}개 (완료 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원 | 입금 예정가 0원`;
+                // 요약 텍스트 업데이트
+                let filterMsg = `${params.startDate}~${params.endDate}`;
+                if(params.keyword) filterMsg += ` / 검색어: "${params.keyword}"`;
+                
+                tableSummary.innerText = `[${filterMsg}] 총 ${totalCount}개 (확정 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원`;
             }
 
             // --- 유틸리티 함수들 ---
@@ -464,9 +554,10 @@
                 const mm = String(date.getMinutes()).padStart(2, '0');
                 return `${hh}:${mm}`;
             }
-
-            function updatePeriodText(dateStr, dayName) {
-                periodText.innerText = `입실일 ${dateStr} (${dayName}) ~ ${dateStr} (${dayName})`;
+            
+            function setSearchInputs(start, end) {
+                searchStartDate.value = formatDate(start);
+                searchEndDate.value = formatDate(end);
             }
         });
     </script>
