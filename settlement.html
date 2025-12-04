@@ -6,7 +6,7 @@
     <title>Insta 파트너센터 - 정산 내역</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- [1] 기본 레이아웃 & 사이드바 스타일 (예약 페이지에서 가져옴) --- */
+        /* --- [공통] 레이아웃 & 사이드바 스타일 --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
@@ -23,16 +23,15 @@
         .menu-item { padding: 15px 20px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
         .menu-item:hover { background-color: #e65c00; }
         .menu-item.active { background-color: #cc5200; font-weight: bold; }
-        .menu-item a { text-decoration: none; color: white; display:flex; align-items:center; gap:10px; width:100%; }
 
-        /* 메인 컨텐츠 영역 (기존 정산 페이지의 body padding을 여기로 이동) */
+        /* 메인 컨텐츠 영역 */
         .main-content { 
             flex-grow: 1; 
             padding: 40px; 
             overflow-y: auto; 
         }
 
-        /* --- [2] 정산 페이지 전용 스타일 --- */
+        /* --- [페이지 전용] 정산 내역 스타일 --- */
         
         /* 헤더 영역 */
         .page-header { margin-bottom: 30px; }
@@ -93,10 +92,21 @@
             <i class="fa-solid fa-hotel"></i> insta 파트너센터
         </div>
         <ul class="menu-list">
-            <li class="menu-item"><i class="fa-solid fa-house"></i> 홈</li>
-            <li class="menu-item"><i class="fa-solid fa-calendar-check"></i> 판매 관리</li>
-            <li class="menu-item"><i class="fa-solid fa-list-check"></i> 예약</li>
-            <li class="menu-item active"><i class="fa-solid fa-calculator"></i> 정산</li>
+            <li class="menu-item">
+                <i class="fa-solid fa-house"></i> 홈
+            </li>
+            
+            <li class="menu-item" onclick="location.href='index.html'">
+                <i class="fa-solid fa-calendar-check"></i> 판매 관리
+            </li>
+            
+            <li class="menu-item" onclick="location.href='reservation.html'">
+                <i class="fa-solid fa-list-check"></i> 예약
+            </li>
+            
+            <li class="menu-item active" onclick="location.href='settlement.html'">
+                <i class="fa-solid fa-calculator"></i> 정산
+            </li>
         </ul>
     </nav>
 
@@ -172,7 +182,7 @@
     </main>
 
     <script>
-        // 이미지에 있는 데이터 예시 (실제로는 Supabase에서 불러와야 함)
+        // 임시 데이터 (Supabase 연동 시 이 부분을 교체하면 됩니다)
         const settlementData = [
             {
                 date: '2025.12.01(월)',
