@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- 기본 스타일 (변경 없음) --- */
+        /* --- 기본 스타일 --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f5f7fa; color: #333; display: flex; min-height: 100vh; }
 
@@ -70,8 +70,6 @@
 
         .room-type { font-weight: bold; display: block; }
         .stay-info { font-size: 0.8rem; color: #ff6900; }
-        .price-original { text-decoration: line-through; color: #999; font-size: 0.8rem; display: block;}
-        .price-final { font-weight: bold; color: #333; }
         
         .request-text { font-size: 0.85rem; color: #555; text-align: left; max-width: 150px; line-height: 1.4; }
         .sns-info { display: flex; flex-direction: column; gap: 4px; text-align: left; font-size: 0.8rem; color: #444; }
@@ -97,7 +95,7 @@
         .option-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
         .loading-spinner { text-align: center; padding: 20px; color: #888; }
         
-        /* [추가됨] 취소 버튼 스타일 */
+        /* 취소 버튼 스타일 */
         .btn-cancel {
             background-color: white;
             border: 1px solid #e74c3c;
@@ -220,9 +218,9 @@
                             <th style="width: 15%;">입실/퇴실일시</th>
                             <th style="width: 10%;">예약일시</th>
                             <th style="width: 8%;">예약상태</th>
-                            <th style="width: 15%;">금액 및 할인정보</th>
-                            <th style="width: 12%;">선택 옵션 (조식 등)</th>
-                            <th style="width: 15%;">입실 정보 (연락처)</th>
+                            <th style="width: 15%;">판매가 및 입금가</th>
+                            <th style="width: 12%;">옵션 (조식 등)</th>
+                            <th style="width: 15%;">입실정보 (연락처)</th>
                         </tr>
                     </thead>
                     <tbody id="reservation-list">
@@ -363,23 +361,16 @@
                 currentParams.startDate = formatDate(today);
                 currentParams.endDate = formatDate(today);
                 currentParams.keyword = '';
-                // 탭은 유지할지 초기화할지 선택 (여기선 탭 유지)
                 
                 fetchReservations(currentParams);
             });
 
-            // [추가됨] 탭 버튼 (전체 / 확정 / 취소) 클릭 이벤트
+            // [탭] 상태 탭 클릭 이벤트
             statusTabs.forEach(tab => {
                 tab.addEventListener('click', function() {
-                    // 1. 스타일 변경 (active 클래스 이동)
                     statusTabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
-
-                    // 2. 상태값 업데이트
-                    const selectedStatus = this.getAttribute('data-status');
-                    currentParams.status = selectedStatus;
-
-                    // 3. 데이터 다시 불러오기
+                    currentParams.status = this.getAttribute('data-status');
                     fetchReservations(currentParams);
                 });
             });
@@ -438,7 +429,6 @@
                         
                         setSearchInputs(dateObj, dateObj); 
                         
-                        // 날짜 클릭 시 해당 날짜로 파라미터 업데이트하고 조회
                         currentParams.startDate = fullDateStr;
                         currentParams.endDate = fullDateStr;
                         fetchReservations(currentParams); 
@@ -454,11 +444,10 @@
                 });
             }
 
-            // --- [기능 함수] 2. 예약 내역 조회 (필터링 적용) ---
+            // --- [기능 함수] 2. 예약 내역 조회 ---
             async function fetchReservations(params) {
                 reservationList.innerHTML = '<tr><td colspan="9" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 데이터를 불러오는 중...</td></tr>';
 
-                // 기본 쿼리: 기간 검색
                 let query = supabase
                     .from('bookings')
                     .select('*')
@@ -466,14 +455,11 @@
                     .lte('check_in', params.endDate + ' 23:59:59')
                     .order('created_at', { ascending: false });
 
-                // 이름 검색어가 있다면 조건 추가
                 if (params.keyword) {
                     query = query.ilike('guest_name', `%${params.keyword}%`);
                 }
 
-                // [수정됨] 탭 상태에 따른 필터링 추가
                 if (params.status && params.status !== 'all') {
-                    // status가 'all'이 아니면 해당 status(confirmed 또는 cancelled)와 일치하는 것만 조회
                     query = query.eq('status', params.status);
                 }
 
@@ -488,7 +474,7 @@
                 renderTableRows(bookings, params);
             }
 
-            // --- [기능 함수] 3. 테이블 HTML 렌더링 ---
+            // --- [기능 함수] 3. 테이블 HTML 렌더링 (수정됨) ---
             function renderTableRows(bookings, params) {
                 if (!bookings || bookings.length === 0) {
                     reservationList.innerHTML = '<tr><td colspan="9" style="padding:30px; color:#888;">조건에 맞는 예약 내역이 없습니다.</td></tr>';
@@ -496,7 +482,6 @@
                     let periodMsg = `${params.startDate} ~ ${params.endDate}`;
                     if (params.keyword) periodMsg += ` (이름: ${params.keyword})`;
                     
-                    // 탭 상태 메시지 추가
                     let statusMsg = "";
                     if(params.status === 'confirmed') statusMsg = " [확정된 예약]";
                     else if(params.status === 'cancelled') statusMsg = " [취소된 예약]";
@@ -514,13 +499,19 @@
                 bookings.forEach(booking => {
                     // 통계 계산
                     const isCancelled = (booking.status === 'cancelled');
+                    const totalPrice = Number(booking.total_price || 0); // 결제 금액
                     
                     if (!isCancelled) {
                         completedCount++;
-                        totalRevenue += (booking.total_price || 0);
+                        totalRevenue += totalPrice;
                     } else {
                         cancelledCount++;
                     }
+
+                    // --- [수정된 부분] 수수료 및 입금가 계산 로직 ---
+                    // 수수료 3% 제외한 입금가 (0.97을 곱하고 소수점 내림)
+                    const settlementPrice = Math.floor(totalPrice * 0.97); 
+                    // ---------------------------------------------
 
                     // 상태 배지 및 취소 버튼 로직
                     let statusBadge = '';
@@ -540,9 +531,8 @@
                     const checkOutDate = new Date(booking.check_out);
                     const createdDate = new Date(booking.created_at);
 
-                    // [수정됨] 박수 계산 (체크아웃 - 체크인)
                     const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
-                    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24)); // 일수 계산
+                    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
 
                     // 옵션 HTML
                     let optionsHtml = '<span style="color:#ccc; font-size:0.8rem;">선택안함</span>';
@@ -576,9 +566,17 @@
                                 ${statusBadge}
                                 <div>${actionBtn}</div>
                             </td>
-                            <td>
-                                <span class="price-original">객실가 ${Number(booking.room_price).toLocaleString()}원</span>
-                                <span class="price-final">총 ${Number(booking.total_price).toLocaleString()}원</span>
+                            
+                            <td style="text-align: right; padding-right: 20px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                                    <span style="font-size: 0.9rem; color: #555;">
+                                        결제금액 <strong>${totalPrice.toLocaleString()}원</strong>
+                                    </span>
+                                    <span style="font-size: 0.95rem; color: #333; font-weight: bold;">
+                                        입금가 <span style="color:#ff6900;">${settlementPrice.toLocaleString()}원</span>
+                                    </span>
+                                    <span style="font-size: 0.75rem; color: #aaa;">(수수료 3% 제외)</span>
+                                </div>
                             </td>
                             <td style="vertical-align: top; padding-top:20px;">
                                 ${optionsHtml}
@@ -596,16 +594,14 @@
 
                 reservationList.innerHTML = html;
                 
-                // 요약 텍스트 업데이트
                 let filterMsg = `${params.startDate}~${params.endDate}`;
                 if(params.keyword) filterMsg += ` / 검색어: "${params.keyword}"`;
                 
-                // 탭 상태 표시
                 let statusLabel = "전체";
                 if(params.status === 'confirmed') statusLabel = "확정만";
                 else if(params.status === 'cancelled') statusLabel = "취소만";
 
-                tableSummary.innerText = `[${filterMsg}] (${statusLabel}) 총 ${totalCount}개 (확정 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원`;
+                tableSummary.innerText = `[${filterMsg}] (${statusLabel}) 총 ${totalCount}개 (확정 ${completedCount} / 취소 ${cancelledCount}) | 총매출 ${totalRevenue.toLocaleString()}원`;
             }
 
             // --- 유틸리티 함수들 ---
