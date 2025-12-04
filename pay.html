@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>insta 파트너센터</title>
+    <title>insta 파트너센터 - 판매관리</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -142,11 +142,11 @@
             <i class="fa-solid fa-hotel"></i> insta 파트너센터
         </div>
         <ul class="menu-list">
-            <li class="menu-item">
+            <li class="menu-item" onclick="location.href='index.html'">
                 <i class="fa-solid fa-house"></i> 홈
             </li>
             
-            <li class="menu-item" onclick="location.href='index.html'">
+            <li class="menu-item active" onclick="location.href='pay.html'">
                 <i class="fa-solid fa-calendar-check"></i> 판매 관리
             </li>
             
@@ -154,10 +154,10 @@
                 <i class="fa-solid fa-list-check"></i> 예약
             </li>
             
-            <li class="menu-item active" onclick="location.href='settlement.html'">
+            <li class="menu-item" onclick="location.href='settlement.html'">
                 <i class="fa-solid fa-calculator"></i> 정산
             </li>
-        </ul>/a>
+        </ul>
     </nav>
 
     <main class="main-content">
@@ -233,7 +233,7 @@
                                 room_id: item.room_id,
                                 price: item.price,
                                 stock: item.stock,
-                                total_rooms: totalRooms,       
+                                total_rooms: totalRooms,        
                                 reserved_count: reservedCount, 
                                 is_available: item.is_available,
                                 is_custom: item.is_custom
@@ -253,7 +253,6 @@
                     if (!props.is_available || props.stock <= 0) {
                         badgeHTML = `<span class="badge badge-soldout">마감</span>`;
                     } else if (props.is_custom) {
-                        // ★ is_custom이 true일 때만 '특가' 뱃지 표시
                         badgeHTML = `<span class="badge badge-custom">특가</span>`;
                     } else {
                         badgeHTML = `<span class="badge badge-selling">판매중</span>`;
@@ -273,7 +272,7 @@
                     return { html: html }
                 },
 
-                // 수정 팝업 (여기서 로직 수정됨!)
+                // 수정 팝업
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     const date = info.event.startStr;
@@ -316,8 +315,6 @@
                             const newPrice = document.getElementById('swal-price').value;
                             const newStock = document.getElementById('swal-stock').value;
                             const newAvailable = document.getElementById('swal-available').checked;
-                            
-                            // ★ [수정된 부분] 무조건 true가 아니라, 체크박스 값에 따라 결정됨!
                             const newIsCustom = document.getElementById('swal-custom').checked;
 
                             const { error } = await supabase
@@ -326,7 +323,7 @@
                                     price: newPrice,
                                     stock: newStock,
                                     is_available: newAvailable,
-                                    is_custom: newIsCustom // 체크했으면 true, 안했으면 false
+                                    is_custom: newIsCustom 
                                 })
                                 .eq('room_id', props.room_id)
                                 .eq('date', date);
