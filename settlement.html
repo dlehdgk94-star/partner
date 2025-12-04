@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파트너센터 - 정산 내역</title>
+    <style>
+        /* 기본 스타일 초기화 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f7fa; /* 배경색 살짝 회색빛 */
+            color: #333;
+            padding: 40px;
+        }
+
+        /* 헤더 영역 */
+        .page-header {
+            margin-bottom: 30px;
+        }
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a2b5e; /* 네이비 포인트 컬러 */
+            margin-bottom: 10px;
+        }
+        .page-header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 탭 메뉴 (선택사항) */
+        .tabs {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab-item {
+            display: inline-block;
+            padding: 10px 20px;
+            font-weight: 700;
+            color: #1a2b5e;
+            border-bottom: 3px solid #1a2b5e;
+            cursor: pointer;
+        }
+
+        /* 검색 필터 박스 */
+        .search-box {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 24px;
+            border-radius: 4px;
+            margin-bottom: 40px;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            width: 120px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn-group button {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 6px 16px;
+            margin-right: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 2px;
+        }
+        .btn-group button.active {
+            background-color: #1a2b5e;
+            color: #fff;
+            border-color: #1a2b5e;
+        }
+
+        .date-picker-group {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+        .date-picker-group input[type="date"] {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            margin: 0 5px;
+            font-family: inherit;
+        }
+
+        .radio-group label {
+            margin-right: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .radio-group input {
+            margin-right: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 8px 24px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        .btn-reset {
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+        .btn-search {
+            background: #1a2b5e;
+            border: 1px solid #1a2b5e;
+            color: #fff;
+        }
+
+        /* 리스트 섹션 헤더 */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            margin-bottom: 10px;
+        }
+        .list-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .list-period {
+            font-size: 14px;
+            color: #666;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+
+        /* 테이블 스타일 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            font-size: 13px;
+            border-top: 2px solid #666;
+        }
+
+        th {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            border-right: 1px solid #eee;
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            vertical-align: middle;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            border-right: 1px solid #eee;
+            text-align: center;
+            color: #555;
+            vertical-align: middle;
+        }
+
+        /* 마지막 컬럼 오른쪽 보더 제거 */
+        th:last-child, td:last-child {
+            border-right: none;
+        }
+
+        /* 금액 등 우측 정렬이 필요한 컬럼 */
+        .text-right {
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        /* 상세보기 버튼 */
+        .btn-detail {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+        .btn-detail:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* 합계 행 스타일 */
+        tfoot tr {
+            background-color: #f5f7fa;
+            font-weight: 700;
+        }
+        tfoot td {
+            border-top: 2px solid #ddd;
+            border-bottom: 2px solid #666; /* 하단 굵은 선 */
+            color: #333;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <h2>정산 내역</h2>
+        <p>날짜별 정산 받을 금액을 확인하세요. 정산일이 휴일인 경우에는 다음 영업일에 입금됩니다.</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab-item">정산 내역</div>
+    </div>
+
+    <div class="search-box">
+        <div class="filter-row">
+            <div class="label">기간</div>
+            <div class="btn-group">
+                <button class="active">이번주</button>
+                <button>이번달</button>
+                <button>지난주</button>
+                <button>지난달</button>
+            </div>
+            <div class="date-picker-group">
+                <input type="date" value="2025-11-30">
+                <span>~</span>
+                <input type="date" value="2025-12-06">
+                <span style="font-size:18px; margin-left:5px;">📅</span>
+            </div>
+        </div>
+
+        <div class="filter-row">
+            <div class="label">조회 기준일</div>
+            <div class="radio-group">
+                <label><input type="radio" name="dateBase" checked> 정산일</label>
+                <label><input type="radio" name="dateBase"> 정산 대상 기간</label>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-reset">초기화</button>
+            <button class="btn btn-search">검색</button>
+        </div>
+    </div>
+
+    <div class="list-header">
+        <div class="list-title">
+            일별 합계 <span class="list-period">정산일 기준 2025.11.30(일) ~ 2025.12.06(토)</span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">정산일</th>
+                <th rowspan="2">정산 대상 기간</th>
+                <th rowspan="2">총 판매 금액</th>
+                <th rowspan="2">총 정산 금액</th>
+                <th colspan="2">정산 대상 금액</th>
+                <th rowspan="2">상세내역</th>
+            </tr>
+            <tr>
+                <th>정산 대기</th>
+                <th>정산 완료</th>
+            </tr>
+        </thead>
+        <tbody id="settlement-table-body">
+            </tbody>
+        <tfoot>
+            <tr id="table-footer">
+                </tr>
+        </tfoot>
+    </table>
+
+    <script>
+        // 이미지에 있는 데이터 예시 (실제로는 Supabase에서 불러와야 함)
+        const settlementData = [
+            {
+                date: '2025.12.01(월)',
+                period: '2025.11.25(화)',
+                sales: 375000,
+                settlement: 337500,
+                pending: 0,
+                completed: 337500
+            },
+            {
+                date: '2025.12.02(화)',
+                period: '2025.11.26(수)',
+                sales: 485000,
+                settlement: 436500,
+                pending: 0,
+                completed: 436500
+            },
+            {
+                date: '2025.12.03(수)',
+                period: '2025.11.27(목)',
+                sales: 255000,
+                settlement: 229500,
+                pending: 0,
+                completed: 229500
+            },
+            {
+                date: '2025.12.04(목)',
+                period: '2025.11.28(금) ~ 2025.11.30(일)',
+                sales: 2590000,
+                settlement: 2331000,
+                pending: 0,
+                completed: 0 // 이미지에는 0원으로 보임 (혹은 대기로 잡힐 수 있음)
+            },
+            {
+                date: '2025.12.05(금)',
+                period: '2025.12.01(월)',
+                sales: 330000,
+                settlement: 297000,
+                pending: 297000,
+                completed: 0
+            }
+        ];
+
+        // 숫자를 3자리마다 콤마 찍어주는 함수 (원화 표시 포함)
+        function formatCurrency(amount) {
+            return amount.toLocaleString() + '원';
+        }
+
+        // 테이블 렌더링 함수
+        function renderTable() {
+            const tbody = document.getElementById('settlement-table-body');
+            const tfoot = document.getElementById('table-footer');
+            
+            let html = '';
+            
+            // 합계 계산용 변수
+            let totalSales = 0;
+            let totalSettlement = 0;
+            let totalPending = 0;
+            let totalCompleted = 0;
+
+            settlementData.forEach(item => {
+                totalSales += item.sales;
+                totalSettlement += item.settlement;
+                totalPending += item.pending;
+                totalCompleted += item.completed;
+
+                html += `
+                    <tr>
+                        <td>${item.date}</td>
+                        <td>${item.period}</td>
+                        <td class="text-right">${formatCurrency(item.sales)}</td>
+                        <td class="text-right" style="font-weight:bold;">${formatCurrency(item.settlement)}</td>
+                        <td class="text-right">${formatCurrency(item.pending)}</td>
+                        <td class="text-right">${formatCurrency(item.completed)}</td>
+                        <td><button class="btn-detail">상세보기</button></td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+            // 합계 행 렌더링
+            tfoot.innerHTML = `
+                <td colspan="2">합계</td>
+                <td class="text-right">${formatCurrency(totalSales)}</td>
+                <td class="text-right">${formatCurrency(totalSettlement)}</td>
+                <td class="text-right">${formatCurrency(totalPending)}</td>
+                <td class="text-right">${formatCurrency(totalCompleted)}</td>
+                <td></td>
+            `;
+        }
+
+        // 실행
+        renderTable();
+    </script>
+</body>
+</html>
