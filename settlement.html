@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Insta 파트너센터 - 정산 내역</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- [공통] 레이아웃 & 사이드바 스타일 --- */
@@ -83,6 +84,8 @@
         /* 합계 행 스타일 */
         tfoot tr { background-color: #f5f7fa; font-weight: 700; }
         tfoot td { border-top: 2px solid #ddd; border-bottom: 2px solid #666; color: #333; }
+        
+        .loading-spinner { padding: 40px; text-align: center; color: #888; }
     </style>
 </head>
 <body>
@@ -113,7 +116,7 @@
     <main class="main-content">
         <div class="page-header">
             <h2>정산 내역</h2>
-            <p>날짜별 정산 받을 금액을 확인하세요. 정산일이 휴일인 경우에는 다음 영업일에 입금됩니다.</p>
+            <p>날짜별 정산 받을 금액을 확인하세요. 정산일은 예약일 기준 3일 뒤입니다.</p>
         </div>
 
         <div class="tabs">
@@ -122,17 +125,16 @@
 
         <div class="search-box">
             <div class="filter-row">
-                <div class="label">기간</div>
-                <div class="btn-group">
-                    <button class="active">이번주</button>
-                    <button>이번달</button>
-                    <button>지난주</button>
-                    <button>지난달</button>
+                <div class="label">조회 기간</div>
+                <div class="btn-group" id="period-btns">
+                    <button data-days="0">오늘</button>
+                    <button class="active" data-days="7">최근 7일</button>
+                    <button data-days="30">최근 1개월</button>
                 </div>
                 <div class="date-picker-group">
-                    <input type="date" value="2025-11-30">
+                    <input type="date" id="start-date">
                     <span>~</span>
-                    <input type="date" value="2025-12-06">
+                    <input type="date" id="end-date">
                     <span style="font-size:18px; margin-left:5px;">📅</span>
                 </div>
             </div>
@@ -140,20 +142,19 @@
             <div class="filter-row">
                 <div class="label">조회 기준일</div>
                 <div class="radio-group">
-                    <label><input type="radio" name="dateBase" checked> 정산일</label>
-                    <label><input type="radio" name="dateBase"> 정산 대상 기간</label>
-                </div>
+                    <label><input type="radio" name="dateBase" value="settlement" checked> 정산일 (예약+3일)</label>
+                    </div>
             </div>
 
             <div class="action-buttons">
-                <button class="btn btn-reset">초기화</button>
-                <button class="btn btn-search">검색</button>
+                <button class="btn btn-reset" id="btn-reset">초기화</button>
+                <button class="btn btn-search" id="btn-search">검색</button>
             </div>
         </div>
 
         <div class="list-header">
             <div class="list-title">
-                일별 합계 <span class="list-period">정산일 기준 2025.11.30(일) ~ 2025.12.06(토)</span>
+                일별 합계 <span class="list-period" id="period-text"></span>
             </div>
         </div>
 
@@ -161,10 +162,10 @@
             <thead>
                 <tr>
                     <th rowspan="2">정산일</th>
-                    <th rowspan="2">정산 대상 기간</th>
-                    <th rowspan="2">총 판매 금액</th>
-                    <th rowspan="2">총 정산 금액</th>
-                    <th colspan="2">정산 대상 금액</th>
+                    <th rowspan="2">정산 대상 (예약일)</th>
+                    <th rowspan="2">총 판매 금액<br>(예약 결제금)</th>
+                    <th rowspan="2">총 정산 금액<br>(입금가)</th>
+                    <th colspan="2">정산 상태</th>
                     <th rowspan="2">상세내역</th>
                 </tr>
                 <tr>
@@ -173,99 +174,217 @@
                 </tr>
             </thead>
             <tbody id="settlement-table-body">
-                </tbody>
+                <tr><td colspan="7" class="loading-spinner">데이터를 불러오는 중입니다...</td></tr>
+            </tbody>
             <tfoot>
                 <tr id="table-footer">
-                    </tr>
+                </tr>
             </tfoot>
         </table>
     </main>
 
     <script>
-        // 임시 데이터 (Supabase 연동 시 이 부분을 교체하면 됩니다)
-        const settlementData = [
-            {
-                date: '2025.12.01(월)',
-                period: '2025.11.25(화)',
-                sales: 375000,
-                settlement: 337500,
-                pending: 0,
-                completed: 337500
-            },
-            {
-                date: '2025.12.02(화)',
-                period: '2025.11.26(수)',
-                sales: 485000,
-                settlement: 436500,
-                pending: 0,
-                completed: 436500
-            },
-            {
-                date: '2025.12.03(수)',
-                period: '2025.11.27(목)',
-                sales: 255000,
-                settlement: 229500,
-                pending: 0,
-                completed: 229500
-            },
-            {
-                date: '2025.12.04(목)',
-                period: '2025.11.28(금) ~ 2025.11.30(일)',
-                sales: 2590000,
-                settlement: 2331000,
-                pending: 0,
-                completed: 0 
-            },
-            {
-                date: '2025.12.05(금)',
-                period: '2025.12.01(월)',
-                sales: 330000,
-                settlement: 297000,
-                pending: 297000,
-                completed: 0
-            }
-        ];
+        // --- Supabase 설정 (예약페이지와 동일) ---
+        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenklhns.supabase.co'; 
+        const YOUR_SUPABASE_KEY = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27'; 
+        const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
 
-        // 숫자를 3자리마다 콤마 찍어주는 함수 (원화 표시 포함)
+        // --- 전역 변수 ---
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const periodText = document.getElementById('period-text');
+        
+        // --- 유틸리티 함수 ---
+        function formatDate(date) { 
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
         function formatCurrency(amount) {
             return amount.toLocaleString() + '원';
         }
 
-        // 테이블 렌더링 함수
-        function renderTable() {
+        // --- 초기화 및 이벤트 리스너 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 초기 날짜 설정 (최근 7일)
+            const today = new Date();
+            const lastWeek = new Date();
+            lastWeek.setDate(today.getDate() - 6); // 오늘 포함 7일
+
+            startDateInput.value = formatDate(lastWeek);
+            endDateInput.value = formatDate(today);
+
+            fetchSettlementData();
+
+            // 검색 버튼 이벤트
+            document.getElementById('btn-search').addEventListener('click', fetchSettlementData);
+            
+            // 초기화 버튼
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                startDateInput.value = formatDate(lastWeek);
+                endDateInput.value = formatDate(today);
+                fetchSettlementData();
+            });
+
+            // 기간 버튼 (오늘/7일/1개월) 이벤트
+            const periodBtns = document.querySelectorAll('#period-btns button');
+            periodBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    periodBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const days = parseInt(this.getAttribute('data-days'));
+                    const end = new Date();
+                    const start = new Date();
+                    if(days > 0) start.setDate(end.getDate() - (days - 1));
+                    
+                    startDateInput.value = formatDate(start);
+                    endDateInput.value = formatDate(end);
+                    fetchSettlementData();
+                });
+            });
+        });
+
+        // --- 핵심 데이터 로직 ---
+        async function fetchSettlementData() {
+            const tbody = document.getElementById('settlement-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 데이터를 조회 중입니다...</td></tr>';
+
+            const startStr = startDateInput.value;
+            const endStr = endDateInput.value;
+
+            periodText.innerText = `정산일 기준 ${startStr} ~ ${endStr}`;
+
+            // [중요 로직] 
+            // 사용자가 "정산일" 기준으로 검색을 했습니다 (예: 12월 5일 정산건을 보고 싶다).
+            // 정산일 = 예약일 + 3일 이므로,
+            // 검색해야 할 "예약일(created_at)" = 정산일 - 3일 입니다.
+            
+            const searchStartObj = new Date(startStr);
+            searchStartObj.setDate(searchStartObj.getDate() - 3); // 예약일 기준 검색 시작일
+            
+            const searchEndObj = new Date(endStr);
+            searchEndObj.setDate(searchEndObj.getDate() - 3); // 예약일 기준 검색 종료일
+
+            const queryStart = formatDate(searchStartObj);
+            const queryEnd = formatDate(searchEndObj);
+
+            // Supabase에서 예약 데이터 가져오기 (취소된 건 제외)
+            const { data: bookings, error } = await supabase
+                .from('bookings')
+                .select('*')
+                .gte('created_at', queryStart + ' 00:00:00')
+                .lte('created_at', queryEnd + ' 23:59:59')
+                .neq('status', 'cancelled') // 취소된 건은 정산 제외
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="7">데이터 조회 실패</td></tr>';
+                return;
+            }
+
+            processAndRender(bookings, startStr, endStr);
+        }
+
+        function processAndRender(bookings, filterStart, filterEnd) {
             const tbody = document.getElementById('settlement-table-body');
             const tfoot = document.getElementById('table-footer');
-            
+
+            // 1. 날짜별로 그룹화
+            const groupedData = {};
+
+            bookings.forEach(booking => {
+                // 예약일
+                const createdAt = new Date(booking.created_at);
+                const bookingDateStr = formatDate(createdAt);
+
+                // 정산일 = 예약일 + 3일
+                const settlementDate = new Date(createdAt);
+                settlementDate.setDate(settlementDate.getDate() + 3);
+                const settlementDateStr = formatDate(settlementDate);
+
+                // 필터 범위 밖의 데이터(시간차로 인해 딸려온 것들) 제거
+                if (settlementDateStr < filterStart || settlementDateStr > filterEnd) return;
+
+                if (!groupedData[settlementDateStr]) {
+                    groupedData[settlementDateStr] = {
+                        settlementDate: settlementDateStr,
+                        bookingDates: new Set(), // 예약일들을 모음 (보통 하루겠지만)
+                        sales: 0,
+                        settlement: 0,
+                        count: 0
+                    };
+                }
+
+                // 금액 계산
+                const salesAmt = Number(booking.total_price || 0);
+                const settleAmt = Math.floor(salesAmt * 0.97); // 입금가 (3% 제외)
+
+                groupedData[settlementDateStr].sales += salesAmt;
+                groupedData[settlementDateStr].settlement += settleAmt;
+                groupedData[settlementDateStr].bookingDates.add(bookingDateStr);
+                groupedData[settlementDateStr].count++;
+            });
+
+            // 2. 그룹화된 데이터를 배열로 변환 및 정렬 (최신 정산일이 위로)
+            const sortedList = Object.values(groupedData).sort((a, b) => {
+                return b.settlementDate.localeCompare(a.settlementDate);
+            });
+
+            // 3. 렌더링
+            if (sortedList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="padding:40px;">해당 기간에 정산 예정인 내역이 없습니다.</td></tr>';
+                tfoot.innerHTML = '<td colspan="7">합계 데이터가 없습니다.</td>';
+                return;
+            }
+
             let html = '';
-            
-            // 합계 계산용 변수
             let totalSales = 0;
             let totalSettlement = 0;
             let totalPending = 0;
             let totalCompleted = 0;
 
-            settlementData.forEach(item => {
+            const todayStr = formatDate(new Date()); // 오늘 날짜
+
+            sortedList.forEach(item => {
+                const bookingDateTxt = Array.from(item.bookingDates).sort().join(', '); // 예약일 표시
+
+                // 정산 상태 판별 (정산일 <= 오늘 이면 완료, 미래면 대기)
+                const isCompleted = item.settlementDate <= todayStr;
+                
+                let pendingAmt = 0;
+                let completedAmt = 0;
+
+                if (isCompleted) {
+                    completedAmt = item.settlement;
+                    totalCompleted += completedAmt;
+                } else {
+                    pendingAmt = item.settlement;
+                    totalPending += pendingAmt;
+                }
+
                 totalSales += item.sales;
                 totalSettlement += item.settlement;
-                totalPending += item.pending;
-                totalCompleted += item.completed;
 
                 html += `
                     <tr>
-                        <td>${item.date}</td>
-                        <td>${item.period}</td>
+                        <td><strong>${item.settlementDate}</strong></td>
+                        <td>${bookingDateTxt}</td>
                         <td class="text-right">${formatCurrency(item.sales)}</td>
-                        <td class="text-right" style="font-weight:bold;">${formatCurrency(item.settlement)}</td>
-                        <td class="text-right">${formatCurrency(item.pending)}</td>
-                        <td class="text-right">${formatCurrency(item.completed)}</td>
-                        <td><button class="btn-detail">상세보기</button></td>
+                        <td class="text-right" style="font-weight:bold; color:#ff6900;">${formatCurrency(item.settlement)}</td>
+                        <td class="text-right" style="color:#888;">${pendingAmt > 0 ? formatCurrency(pendingAmt) : '-'}</td>
+                        <td class="text-right" style="color:#1a2b5e; font-weight:bold;">${completedAmt > 0 ? formatCurrency(completedAmt) : '-'}</td>
+                        <td><button class="btn-detail" onclick="alert('${item.settlementDate} 정산 상세내역 기능은 준비중입니다.')">상세보기</button></td>
                     </tr>
                 `;
             });
 
             tbody.innerHTML = html;
 
-            // 합계 행 렌더링
+            // 합계 행
             tfoot.innerHTML = `
                 <td colspan="2">합계</td>
                 <td class="text-right">${formatCurrency(totalSales)}</td>
@@ -275,9 +394,6 @@
                 <td></td>
             `;
         }
-
-        // 실행
-        renderTable();
     </script>
 </body>
 </html>
