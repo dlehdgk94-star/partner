@@ -11,8 +11,8 @@
     
     <style>
         /* ====================
-           레이아웃 (Layout)
-           ==================== */
+            레이아웃 (Layout)
+            ==================== */
         * { box-sizing: border-box; }
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
@@ -26,7 +26,7 @@
         /* 1. 좌측 사이드바 디자인 수정 */
         .sidebar {
             width: 250px;
-            background-color: #FF5000; /* 메인 주황색 */
+            background-color: #ff6900; /* [수정] 요청하신 색상으로 변경 */
             color: white;
             display: flex;
             flex-direction: column;
@@ -34,15 +34,15 @@
         }
 
         .logo-area {
-            padding: 25px 20px; /* 여백 조정 */
+            padding: 25px 20px;
             font-size: 20px;
             font-weight: bold;
-            border-bottom: 1px solid rgba(255,255,255,0.1); /* 선을 더 연하게 */
-            margin-bottom: 0; /* 마진 제거 */
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 0;
             display: flex;
             align-items: center;
             gap: 10px;
-            background-color: #FF5000;
+            background-color: #ff6900; /* [수정] 사이드바와 동일하게 변경 */
         }
 
         .menu-list {
@@ -52,27 +52,27 @@
         }
 
         .menu-item {
-            padding: 18px 25px; /* 높이감을 이미지와 비슷하게 조정 */
+            padding: 18px 25px;
             color: white; 
             text-decoration: none;
             display: flex;
             align-items: center;
             transition: 0.2s;
             cursor: pointer;
-            font-size: 16px; /* 폰트 크기 약간 키움 */
+            font-size: 16px;
             font-weight: 500;
         }
 
         .menu-item i { margin-right: 15px; width: 20px; text-align: center; }
         
-        .menu-item:hover { background-color: #e64a00; }
+        .menu-item:hover { background-color: #e65c00; } /* [수정] 호버 색상도 톤에 맞춰 살짝 조정 */
 
-        /* ★ 핵심 수정: 활성화(Active) 디자인을 이미지와 동일하게 변경 */
+        /* ★ 핵심 수정: 활성화(Active) 디자인 */
         .menu-item.active { 
-            background-color: #bf360c; /* 이미지의 진한 갈색톤 배경 */
+            background-color: #cc5200; /* [수정] 메인 컬러에 맞춰 진한 톤 조정 */
             color: white; 
             font-weight: bold;
-            border-left: none; /* 기존 흰색 테두리 제거 */
+            border-left: none;
         }
 
         /* 2. 우측 메인 컨텐츠 (기존 유지) */
@@ -102,8 +102,8 @@
         }
 
         /* ====================
-           캘린더 디자인 (기존 유지)
-           ==================== */
+            캘린더 디자인 (기존 유지)
+            ==================== */
         #calendar {
             background: white;
             padding: 20px;
@@ -142,7 +142,7 @@
         .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; margin-bottom: 4px; }
         .badge-selling { background-color: #66bb6a; }
         .badge-soldout { background-color: #bdbdbd; }
-        .badge-custom { background-color: #FF5000; } 
+        .badge-custom { background-color: #ff6900; } /* [수정] 특가 뱃지도 메인 컬러와 통일 */
 
         .room-name { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .room-price { display: block; font-size: 12px; color: #555; text-align: right; }
@@ -186,7 +186,6 @@
 
     <script>
         // ... (기존 스크립트 내용은 그대로 유지) ...
-        // (스크립트 부분은 수정할 필요가 없어 생략했습니다. 기존 코드를 그대로 쓰시면 됩니다.)
         
         // ==========================================
         // 1. Supabase 연결
@@ -271,7 +270,6 @@
                     if (!props.is_available || props.stock <= 0) {
                         badgeHTML = `<span class="badge badge-soldout">마감</span>`;
                     } else if (props.is_custom) {
-                        // ★ is_custom이 true일 때만 '특가' 뱃지 표시
                         badgeHTML = `<span class="badge badge-custom">특가</span>`;
                     } else {
                         badgeHTML = `<span class="badge badge-selling">판매중</span>`;
@@ -291,7 +289,7 @@
                     return { html: html }
                 },
 
-                // 수정 팝업 (여기서 로직 수정됨!)
+                // 수정 팝업
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     const date = info.event.startStr;
@@ -319,8 +317,8 @@
                                     </div>
 
                                     <div style="display:flex; align-items:center;">
-                                        <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''} style="transform: scale(1.5); margin-right: 8px; accent-color: #FF5000;">
-                                        <label for="swal-custom" style="color:#FF5000; font-weight:bold;">🏷️ 특가 표시</label>
+                                        <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''} style="transform: scale(1.5); margin-right: 8px; accent-color: #ff6900;">
+                                        <label for="swal-custom" style="color:#ff6900; font-weight:bold;">🏷️ 특가 표시</label>
                                     </div>
                                 </div>
                             </div>
@@ -328,14 +326,12 @@
                         showCancelButton: true,
                         confirmButtonText: '저장하기',
                         cancelButtonText: '취소',
-                        confirmButtonColor: '#FF5000',
+                        confirmButtonColor: '#ff6900', // [수정] 버튼 색상도 통일
                         
                         preConfirm: async () => {
                             const newPrice = document.getElementById('swal-price').value;
                             const newStock = document.getElementById('swal-stock').value;
                             const newAvailable = document.getElementById('swal-available').checked;
-                            
-                            // ★ [수정된 부분] 무조건 true가 아니라, 체크박스 값에 따라 결정됨!
                             const newIsCustom = document.getElementById('swal-custom').checked;
 
                             const { error } = await supabase
@@ -344,7 +340,7 @@
                                     price: newPrice,
                                     stock: newStock,
                                     is_available: newAvailable,
-                                    is_custom: newIsCustom // 체크했으면 true, 안했으면 false
+                                    is_custom: newIsCustom
                                 })
                                 .eq('room_id', props.room_id)
                                 .eq('date', date);
