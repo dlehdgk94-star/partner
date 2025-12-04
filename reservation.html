@@ -495,21 +495,23 @@
                 let completedCount = 0;
                 let cancelledCount = 0;
                 let totalRevenue = 0;
+                let totalSettlement = 0; // [추가] 입금 예정가 합계 변수
 
                 bookings.forEach(booking => {
                     // 통계 계산
                     const isCancelled = (booking.status === 'cancelled');
                     const totalPrice = Number(booking.total_price || 0); // 결제 금액
                     
+                    // 수수료 3% 제외한 입금가 (0.97을 곱하고 소수점 내림)
+                    const settlementPrice = Math.floor(totalPrice * 0.97); 
+
                     if (!isCancelled) {
                         completedCount++;
                         totalRevenue += totalPrice;
+                        totalSettlement += settlementPrice; // [추가] 확정된 예약의 입금가 합산
                     } else {
                         cancelledCount++;
                     }
-
-                    // 수수료 3% 제외한 입금가
-                    const settlementPrice = Math.floor(totalPrice * 0.97); 
 
                     // 상태 배지 및 취소 버튼 로직
                     let statusBadge = '';
@@ -601,7 +603,8 @@
                 if(params.status === 'confirmed') statusLabel = "확정만";
                 else if(params.status === 'cancelled') statusLabel = "취소만";
 
-                tableSummary.innerText = `[${filterMsg}] (${statusLabel}) 총 ${totalCount}개 (확정 ${completedCount} / 취소 ${cancelledCount}) | 총매출 ${totalRevenue.toLocaleString()}원`;
+                // [수정된 부분] 매출액 및 입금 예정가 표기
+                tableSummary.innerText = `[${filterMsg}] (${statusLabel}) 총 ${totalCount}개 (확정 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원 | 입금 예정가 ${totalSettlement.toLocaleString()}원`;
             }
 
             // --- 유틸리티 함수들 ---
