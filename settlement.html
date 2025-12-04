@@ -36,12 +36,13 @@
         
         /* 헤더 영역 */
         .page-header { margin-bottom: 30px; }
-        .page-header h2 { font-size: 24px; font-weight: 700; color: #1a2b5e; margin-bottom: 10px; }
+        /* 타이틀 색상을 진한 회색으로 변경 (주황색이 너무 많으면 눈이 아플 수 있어 가독성 고려, 원하시면 #ff6900으로 변경 가능) */
+        .page-header h2 { font-size: 24px; font-weight: 700; color: #333; margin-bottom: 10px; }
         .page-header p { font-size: 14px; color: #666; }
 
-        /* 탭 메뉴 */
+        /* 탭 메뉴 - 파란색 -> 주황색 변경 */
         .tabs { border-bottom: 1px solid #ddd; margin-bottom: 20px; }
-        .tab-item { display: inline-block; padding: 10px 20px; font-weight: 700; color: #1a2b5e; border-bottom: 3px solid #1a2b5e; cursor: pointer; }
+        .tab-item { display: inline-block; padding: 10px 20px; font-weight: 700; color: #ff6900; border-bottom: 3px solid #ff6900; cursor: pointer; }
 
         /* 검색 필터 박스 */
         .search-box { background-color: #fff; border: 1px solid #e0e0e0; padding: 24px; border-radius: 4px; margin-bottom: 40px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -51,8 +52,9 @@
 
         .label { width: 120px; font-weight: 700; font-size: 14px; color: #333; }
 
+        /* 버튼 그룹 - 활성화 시 파란색 -> 주황색 변경 */
         .btn-group button { background: #fff; border: 1px solid #ddd; padding: 6px 16px; margin-right: 5px; cursor: pointer; font-size: 13px; border-radius: 2px; }
-        .btn-group button.active { background-color: #1a2b5e; color: #fff; border-color: #1a2b5e; }
+        .btn-group button.active { background-color: #ff6900; color: #fff; border-color: #ff6900; }
 
         .date-picker-group { display: flex; align-items: center; margin-left: 10px; }
         .date-picker-group input[type="date"] { padding: 5px 10px; border: 1px solid #ddd; margin: 0 5px; font-family: inherit; }
@@ -63,7 +65,10 @@
         .action-buttons { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; }
         .btn { padding: 8px 24px; font-size: 14px; border-radius: 4px; cursor: pointer; margin-left: 8px; }
         .btn-reset { background: #fff; border: 1px solid #ddd; color: #333; }
-        .btn-search { background: #1a2b5e; border: 1px solid #1a2b5e; color: #fff; }
+        
+        /* 검색 버튼 - 파란색 -> 주황색 변경 */
+        .btn-search { background: #ff6900; border: 1px solid #ff6900; color: #fff; }
+        .btn-search:hover { background: #e65c00; border-color: #e65c00; }
 
         /* 리스트 섹션 헤더 */
         .list-header { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; }
@@ -376,7 +381,7 @@
                         <td class="text-right">${formatCurrency(item.sales)}</td>
                         <td class="text-right" style="font-weight:bold; color:#ff6900;">${formatCurrency(item.settlement)}</td>
                         <td class="text-right" style="color:#888;">${pendingAmt > 0 ? formatCurrency(pendingAmt) : '-'}</td>
-                        <td class="text-right" style="color:#1a2b5e; font-weight:bold;">${completedAmt > 0 ? formatCurrency(completedAmt) : '-'}</td>
+                        <td class="text-right" style="color:#ff6900; font-weight:bold;">${completedAmt > 0 ? formatCurrency(completedAmt) : '-'}</td>
                         <td><button class="btn-detail" onclick="alert('${item.settlementDate} 정산 상세내역 기능은 준비중입니다.')">상세보기</button></td>
                     </tr>
                 `;
