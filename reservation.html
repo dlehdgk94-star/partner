@@ -508,10 +508,8 @@
                         cancelledCount++;
                     }
 
-                    // --- [수정된 부분] 수수료 및 입금가 계산 로직 ---
-                    // 수수료 3% 제외한 입금가 (0.97을 곱하고 소수점 내림)
+                    // 수수료 3% 제외한 입금가
                     const settlementPrice = Math.floor(totalPrice * 0.97); 
-                    // ---------------------------------------------
 
                     // 상태 배지 및 취소 버튼 로직
                     let statusBadge = '';
@@ -578,6 +576,7 @@
                                     <span style="font-size: 0.75rem; color: #aaa;">(수수료 3% 제외)</span>
                                 </div>
                             </td>
+                            
                             <td style="vertical-align: top; padding-top:20px;">
                                 ${optionsHtml}
                             </td>
@@ -586,6 +585,7 @@
                                     <div class="sns-item"><i class="fa-solid fa-phone"></i> ${booking.phone || '-'}</div>
                                     <div class="sns-item"><i class="fa-solid fa-envelope"></i> ${booking.guest_email || '-'}</div>
                                     <div class="sns-item"><i class="fa-brands fa-instagram"></i> ${booking.social_insta || '-'}</div>
+                                    <div class="sns-item"><i class="fa-brands fa-tiktok"></i> ${booking.social_tiktok || '-'}</div>
                                 </div>
                             </td>
                         </tr>
