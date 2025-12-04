@@ -23,10 +23,10 @@
             display: flex; 
         }
 
-        /* 1. 좌측 사이드바 */
+        /* 1. 좌측 사이드바 디자인 수정 */
         .sidebar {
             width: 250px;
-            background-color: #FF5000; 
+            background-color: #FF5000; /* 이미지의 밝은 주황색 */
             color: white;
             display: flex;
             flex-direction: column;
@@ -34,31 +34,53 @@
         }
 
         .logo-area {
-            padding: 20px;
+            padding: 25px 20px;
             font-size: 20px;
-            font-weight: bold;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            margin-bottom: 10px;
+            font-weight: 800; /* 폰트 두께 강화 */
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 0;
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #fff;
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
 
         .menu-item {
-            padding: 15px 25px;
-            color: #ffe0b2; 
+            padding: 18px 25px;
+            color: #fff; 
             text-decoration: none;
             display: flex;
             align-items: center;
-            transition: 0.3s;
+            transition: 0.2s;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 16px;
+            font-weight: 500;
         }
 
-        .menu-item i { margin-right: 12px; width: 20px; text-align: center; }
+        .menu-item i { 
+            margin-right: 12px; 
+            width: 24px; 
+            text-align: center; 
+            font-size: 18px;
+        }
         
-        .menu-item:hover { background-color: #e64a00; color: white; }
-        .menu-item.active { background-color: #d84315; color: white; border-left: 4px solid #fff; }
+        .menu-item:hover { 
+            background-color: rgba(0,0,0,0.1); 
+        }
+
+        /* 선택된 메뉴 (Active) 스타일 - 이미지와 동일하게 구현 */
+        .menu-item.active { 
+            background-color: #B02E0C; /* 이미지의 진한 갈색/주황색 톤 */
+            color: white; 
+            font-weight: 700;
+            border-left: none; /* 기존 흰색 선 제거 */
+        }
 
         /* 2. 우측 메인 컨텐츠 */
         .main-content {
