@@ -26,7 +26,7 @@
         /* 1. 좌측 사이드바 디자인 수정 */
         .sidebar {
             width: 250px;
-            background-color: #ff6900; /* [수정] 요청하신 색상으로 변경 */
+            background-color: #ff6900;
             color: white;
             display: flex;
             flex-direction: column;
@@ -42,7 +42,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background-color: #ff6900; /* [수정] 사이드바와 동일하게 변경 */
+            background-color: #ff6900;
         }
 
         .menu-list {
@@ -65,17 +65,17 @@
 
         .menu-item i { margin-right: 15px; width: 20px; text-align: center; }
         
-        .menu-item:hover { background-color: #e65c00; } /* [수정] 호버 색상도 톤에 맞춰 살짝 조정 */
+        .menu-item:hover { background-color: #e65c00; }
 
         /* ★ 핵심 수정: 활성화(Active) 디자인 */
         .menu-item.active { 
-            background-color: #cc5200; /* [수정] 메인 컬러에 맞춰 진한 톤 조정 */
+            background-color: #cc5200;
             color: white; 
             font-weight: bold;
             border-left: none;
         }
 
-        /* 2. 우측 메인 컨텐츠 (기존 유지) */
+        /* 2. 우측 메인 컨텐츠 */
         .main-content {
             flex-grow: 1; 
             overflow-y: auto; 
@@ -102,7 +102,7 @@
         }
 
         /* ====================
-            캘린더 디자인 (기존 유지)
+            캘린더 디자인
             ==================== */
         #calendar {
             background: white;
@@ -142,7 +142,7 @@
         .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; margin-bottom: 4px; }
         .badge-selling { background-color: #66bb6a; }
         .badge-soldout { background-color: #bdbdbd; }
-        .badge-custom { background-color: #ff6900; } /* [수정] 특가 뱃지도 메인 컬러와 통일 */
+        .badge-custom { background-color: #ff6900; }
 
         .room-name { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .room-price { display: block; font-size: 12px; color: #555; text-align: right; }
@@ -185,13 +185,14 @@
     </main>
 
     <script>
-        // ... (기존 스크립트 내용은 그대로 유지) ...
-        
         // ==========================================
-        // 1. Supabase 연결
+        // 1. Supabase 연결 (수정됨: 올바른 키 입력)
         // ==========================================
         const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co'
-        const supabaseKey = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27'
+        
+        // [중요] 아까 확인한 올바른 Anon 키로 교체했습니다.
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'
+        
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
 
         // 객실 정렬 순서 정의
@@ -326,7 +327,7 @@
                         showCancelButton: true,
                         confirmButtonText: '저장하기',
                         cancelButtonText: '취소',
-                        confirmButtonColor: '#ff6900', // [수정] 버튼 색상도 통일
+                        confirmButtonColor: '#ff6900', 
                         
                         preConfirm: async () => {
                             const newPrice = document.getElementById('swal-price').value;
