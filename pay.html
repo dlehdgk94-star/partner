@@ -2,67 +2,88 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>연결 테스트</title>
+    <title>슈파베이스 심층 진단</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
         body { padding: 50px; font-family: sans-serif; }
-        #status { padding: 20px; background: #eee; margin-bottom: 20px; border-radius: 8px; }
-        .success { color: green; font-weight: bold; }
-        .error { color: red; font-weight: bold; }
+        #status { padding: 20px; background: #f0f0f0; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc; }
+        .success { color: green; font-weight: bold; font-size: 1.2em; }
+        .error { color: red; font-weight: bold; font-size: 1.2em; background: #ffe6e6; padding: 10px; display: block; }
+        .info { color: blue; }
     </style>
 </head>
 <body>
 
-    <h2>📢 슈파베이스 연결 진단 모드</h2>
-    <div id="status">연결 확인 중...</div>
+    <h2>🚑 슈파베이스 연결 심층 진단</h2>
+    <div id="status">🔍 진단을 시작합니다...</div>
     <div id='calendar'></div>
 
     <script>
-        // 1. 슈파베이스 설정
-        const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co'
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        // 1. 전역 에러 캐치 (스크립트 로딩 실패 등 잡기 위함)
+        window.onerror = function(message, source, lineno, colno, error) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<span class="error">💥 치명적 오류 발생!</span><br>
+            내용: ${message}<br>
+            위치: ${lineno}번째 줄<br>
+            <br>👉 이 화면을 캡처해서 보여주세요!`;
+            return true;
+        };
 
-        // 2. 진단 시작
+        // 2. 진단 로직
         async function runDiagnosis() {
             const statusDiv = document.getElementById('status');
             
-            // 테스트 1: 그냥 inventory 데이터 아무거나 1개만 가져와보기 (방 이름 연결 없이)
-            const { data, error } = await supabase
-                .from('inventory')
-                .select('*') // 복잡한 연결 빼고 전체 가져오기
-                .limit(5);
+            try {
+                // 라이브러리 로드 확인
+                if (!window.supabase) {
+                    throw new Error("슈파베이스 라이브러리가 로드되지 않았습니다. (인터넷 연결 확인 필요)");
+                }
 
-            if (error) {
-                console.error("에러 발생:", error);
-                statusDiv.innerHTML = `<span class="error">❌ 데이터 가져오기 실패!</span><br>에러 내용: ${error.message}<br><br>👉 F12를 눌러 콘솔창을 캡처해서 보여주세요.`;
-                return;
+                statusDiv.innerHTML = "<span class='info'>🔄 슈파베이스 접속 시도 중...</span>";
+
+                // 설정
+                const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0';
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+                // 데이터 가져오기 시도
+                const { data, error } = await supabase
+                    .from('inventory')
+                    .select('*')
+                    .limit(5);
+
+                if (error) {
+                    throw error; // 에러가 있으면 catch 블록으로 보냄
+                }
+
+                if (!data || data.length === 0) {
+                    statusDiv.innerHTML = `<span class="error">⚠️ 연결 성공했으나 데이터가 없습니다!</span><br>inventory 테이블이 비어있는지 확인해주세요.`;
+                } else {
+                    statusDiv.innerHTML = `<span class="success">✅ 연결 테스트 성공!</span><br>데이터 ${data.length}개를 무사히 가져왔습니다.<br>첫 번째 데이터 날짜: ${data[0].date}`;
+                    
+                    // 달력 그리기 테스트
+                    var calendarEl = document.getElementById('calendar');
+                    var calendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: 'dayGridMonth',
+                        locale: 'ko',
+                        events: data.map(item => ({
+                            title: `재고:${item.stock}`,
+                            start: item.date
+                        }))
+                    });
+                    calendar.render();
+                }
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.innerHTML = `<span class="error">❌ 에러가 발생했습니다!</span><br>
+                에러 내용: <strong>${err.message}</strong><br>
+                <br>👉 이 빨간 글씨를 저에게 알려주세요!`;
             }
-
-            if (!data || data.length === 0) {
-                statusDiv.innerHTML = `<span class="error">⚠️ 연결은 됐는데 데이터가 없습니다!</span><br>inventory 테이블에 데이터가 비어있습니다.`;
-                return;
-            }
-
-            // 성공 시
-            statusDiv.innerHTML = `<span class="success">✅ 연결 성공! 데이터 ${data.length}개를 가져왔습니다.</span><br>이제 달력을 그립니다.`;
-            console.log("가져온 데이터:", data);
-
-            // 달력 그리기
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'ko',
-                events: data.map(item => ({
-                    title: `방ID:${item.room_id} / ${Number(item.price).toLocaleString()}원`,
-                    start: item.date,
-                    color: item.is_available ? '#3788d8' : '#999'
-                }))
-            });
-            calendar.render();
         }
 
+        // 진단 실행
         runDiagnosis();
     </script>
 </body>
