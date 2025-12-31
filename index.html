@@ -2,152 +2,93 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>insta 파트너센터</title>
+    <title>insta 파트너센터 - 홈</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         /* ====================
-            레이아웃 (Layout)
-            ==================== */
+            기본 스타일 (Layout)
+           ==================== */
         * { box-sizing: border-box; }
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
-            margin: 0; 
-            padding: 0; 
+            margin: 0; padding: 0; 
             background-color: #f5f6f8; 
-            height: 100vh;
-            display: flex; 
+            height: 100vh; display: flex; 
         }
 
-        /* 1. 좌측 사이드바 디자인 수정 */
+        /* 사이드바 (기존과 동일) */
         .sidebar {
-            width: 250px;
-            background-color: #ff6900;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
+            width: 250px; background-color: #ff6900; color: white;
+            display: flex; flex-direction: column; flex-shrink: 0;
         }
-
         .logo-area {
-            padding: 25px 20px;
-            font-size: 20px;
-            font-weight: bold;
+            padding: 25px 20px; font-size: 20px; font-weight: bold;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             background-color: #ff6900;
         }
-
-        .menu-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
+        .menu-list { list-style: none; padding: 0; margin: 0; }
         .menu-item {
-            padding: 18px 25px;
-            color: white; 
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            transition: 0.2s;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
+            padding: 18px 25px; color: white; text-decoration: none;
+            display: flex; align-items: center; cursor: pointer; transition: 0.2s;
         }
-
-        .menu-item i { margin-right: 15px; width: 20px; text-align: center; }
-        
         .menu-item:hover { background-color: #e65c00; }
-
-        /* ★ 핵심 수정: 활성화(Active) 디자인 */
         .menu-item.active { 
-            background-color: #cc5200;
-            color: white; 
-            font-weight: bold;
-            border-left: none;
+            background-color: #cc5200; font-weight: bold; 
         }
+        .menu-item i { margin-right: 15px; width: 20px; text-align: center; }
 
-        /* 2. 우측 메인 컨텐츠 */
+        /* 메인 컨텐츠 */
         .main-content {
-            flex-grow: 1; 
-            overflow-y: auto; 
-            padding: 40px;
+            flex-grow: 1; overflow-y: auto; padding: 40px;
         }
+        .content-container { max-width: 1200px; margin: 0 auto; }
 
-        .content-container {
-            max-width: 1400px;
-            margin: 0 auto; 
-        }
-
-        .page-title {
-            font-size: 26px;
-            font-weight: bold;
-            color: #333;
-            margin: 0 0 10px 0;
-            text-align: left;
-        }
-        .page-desc {
-            color: #666;
-            font-size: 14px;
-            margin: 0 0 20px 0;
-            text-align: left;
-        }
+        .page-title { font-size: 26px; font-weight: bold; color: #333; margin: 0 0 10px 0; }
+        .page-desc { color: #666; font-size: 14px; margin: 0 0 30px 0; }
 
         /* ====================
-            캘린더 디자인
-            ==================== */
-        #calendar {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
+            대시보드 위젯 디자인
+           ==================== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4개 카드 배치 */
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white; padding: 25px; border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            min-height: 900px;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
-
-        .fc-toolbar-title { font-size: 1.5em !important; font-weight: bold; color: #333; }
-        .fc-col-header-cell { background-color: #fafafa; padding: 10px 0; border-bottom: 2px solid #ddd; }
-        .fc-day-sun .fc-col-header-cell-cushion { color: #e53935; }
-        .fc-day-sat .fc-col-header-cell-cushion { color: #1e88e5; }
-
-        .fc-event {
-            background: none !important;
-            border: none !important;
-            cursor: pointer;
-            margin-bottom: 4px !important;
+        .stat-title { font-size: 14px; color: #888; margin-bottom: 10px; font-weight: 500; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #333; }
+        .stat-icon { 
+            font-size: 40px; opacity: 0.1; position: absolute; right: 20px; bottom: 20px; 
+            color: #ff6900; 
         }
+        .stat-card { position: relative; overflow: hidden; }
 
-        /* 방 카드 디자인 */
-        .room-card {
-            background-color: #fff;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            padding: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            transition: all 0.2s;
+        /* 최근 예약 테이블 섹션 */
+        .section-box {
+            background: white; padding: 30px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .room-card:hover {
-            border-color: #ffcc80; 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; margin-bottom: 4px; }
-        .badge-selling { background-color: #66bb6a; }
-        .badge-soldout { background-color: #bdbdbd; }
-        .badge-custom { background-color: #ff6900; }
-
-        .room-name { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .room-price { display: block; font-size: 12px; color: #555; text-align: right; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: bold; color: #333; }
         
-        .room-stock { font-size: 11px; color: #777; float: left; letter-spacing: -0.5px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px 10px; border-bottom: 2px solid #eee; color: #555; font-size: 14px; }
+        td { padding: 15px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 14px; }
+        .status-badge { 
+            padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; 
+        }
+        .status-confirm { background-color: #e8f5e9; color: #2e7d32; } /* 예약확정 */
+        .status-cancel { background-color: #ffebee; color: #c62828; } /* 취소 */
+
     </style>
 </head>
 <body>
@@ -157,18 +98,15 @@
             <i class="fa-solid fa-hotel"></i> insta 파트너센터
         </div>
         <ul class="menu-list">
-            <li class="menu-item" onclick="location.href='index.html'">
+            <li class="menu-item active" onclick="location.href='index.html'">
                 <i class="fa-solid fa-house"></i> 홈
             </li>
-            
             <li class="menu-item" onclick="location.href='pay.html'">
                 <i class="fa-solid fa-calendar-check"></i> 판매 관리
             </li>
-            
-            <li class="menu-item active" onclick="location.href='reservation.html'">
+            <li class="menu-item" onclick="location.href='reservation.html'">
                 <i class="fa-solid fa-list-check"></i> 예약
             </li>
-            
             <li class="menu-item" onclick="location.href='settlement.html'">
                 <i class="fa-solid fa-calculator"></i> 정산
             </li>
@@ -177,187 +115,86 @@
 
     <main class="main-content">
         <div class="content-container">
-            <h2 class="page-title">판매 캘린더</h2>
-            <p class="page-desc">상품의 판매 상태, 재고, 가격을 날짜별로 관리하세요. 방을 클릭하면 수정할 수 있습니다.</p>
+            <h2 class="page-title">안녕하세요, 사장님! 👋</h2>
+            <p class="page-desc">오늘의 호텔 현황을 한눈에 확인하세요.</p>
             
-            <div id='calendar'></div>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-title">오늘 들어온 예약</div>
+                    <div class="stat-value">0 건</div>
+                    <i class="fa-solid fa-bell stat-icon"></i>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">오늘 입실 예정</div>
+                    <div class="stat-value">0 팀</div>
+                    <i class="fa-solid fa-suitcase-rolling stat-icon"></i>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">오늘 남은 객실</div>
+                    <div class="stat-value" style="color:#ff6900;">12 개</div>
+                    <i class="fa-solid fa-bed stat-icon"></i>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">12월 예상 매출</div>
+                    <div class="stat-value">0 원</div>
+                    <i class="fa-solid fa-won-sign stat-icon"></i>
+                </div>
+            </div>
+
+            <div class="section-box">
+                <div class="section-header">
+                    <div class="section-title">최근 예약 내역</div>
+                    <a href="reservation.html" style="text-decoration:none; color:#ff6900; font-weight:bold; font-size:14px;">더보기 ></a>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>예약번호</th>
+                            <th>예약자명</th>
+                            <th>객실 타입</th>
+                            <th>체크인</th>
+                            <th>상태</th>
+                            <th>금액</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="color:#888;">#20251230-01</td>
+                            <td><strong>김철수</strong></td>
+                            <td>디럭스룸</td>
+                            <td>2025-12-31</td>
+                            <td><span class="status-badge status-confirm">예약확정</span></td>
+                            <td>120,000원</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#888;">#20251230-02</td>
+                            <td><strong>이영희</strong></td>
+                            <td>스탠다드룸</td>
+                            <td>2025-12-31</td>
+                            <td><span class="status-badge status-confirm">예약확정</span></td>
+                            <td>85,000원</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </main>
 
     <script>
-        // ==========================================
-        // 1. Supabase 연결 (수정됨: 올바른 키 입력)
-        // ==========================================
+        // Supabase 연결 설정 (공유해주신 키 사용)
         const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co'
-        
-        // [중요] 아까 확인한 올바른 Anon 키로 교체했습니다.
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'
-        
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
 
-        // 객실 정렬 순서 정의
-        const roomPriority = {
-            '스탠다드': 1,
-            '디럭스': 2,
-            '프리미엄': 3,
-            '럭셔리': 4,
-            '트윈': 5,
-            '특실': 6
-        };
-
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'ko',
-                height: 'auto',
-                headerToolbar: {
-                    left: 'prev',
-                    center: 'title',
-                    right: 'next'
-                },
-                titleFormat: { year: 'numeric', month: '2-digit' },
-                eventOrder: 'sortIndex',
-                
-                // 데이터 가져오기
-                events: async function(info, successCallback, failureCallback) {
-                    const { data, error } = await supabase
-                        .from('inventory')
-                        .select(`
-                            room_id, date, price, stock, is_available, is_custom,
-                            rooms ( name, total_rooms ) 
-                        `) 
-                        .gte('date', info.startStr.split('T')[0])
-                        .lte('date', info.endStr.split('T')[0]);
-
-                    if (error) {
-                        console.error('에러:', error);
-                        failureCallback(error);
-                        return;
-                    }
-
-                    const events = data.map(item => {
-                        const sortIndex = roomPriority[item.rooms.name] || 99;
-                        const totalRooms = item.rooms.total_rooms || 0;
-                        const reservedCount = Math.max(0, totalRooms - item.stock);
-
-                        return {
-                            title: item.rooms.name,
-                            start: item.date,
-                            sortIndex: sortIndex, 
-                            
-                            extendedProps: {
-                                room_id: item.room_id,
-                                price: item.price,
-                                stock: item.stock,
-                                total_rooms: totalRooms,        
-                                reserved_count: reservedCount, 
-                                is_available: item.is_available,
-                                is_custom: item.is_custom
-                            }
-                        }
-                    });
-                    successCallback(events);
-                },
-
-                // 카드 디자인 그리기
-                eventContent: function(arg) {
-                    let props = arg.event.extendedProps;
-                    let price = Number(props.price).toLocaleString();
-                    let name = arg.event.title;
-
-                    let badgeHTML = '';
-                    if (!props.is_available || props.stock <= 0) {
-                        badgeHTML = `<span class="badge badge-soldout">마감</span>`;
-                    } else if (props.is_custom) {
-                        badgeHTML = `<span class="badge badge-custom">특가</span>`;
-                    } else {
-                        badgeHTML = `<span class="badge badge-selling">판매중</span>`;
-                    }
-
-                    let html = `
-                        <div class="room-card">
-                            <div>${badgeHTML}</div>
-                            <div class="room-name">${name}</div>
-                            <div style="margin-top:4px;">
-                                <span class="room-stock">예약 ${props.reserved_count} / 재고 ${props.stock}</span>
-                                <span class="room-price">${price}원</span>
-                                <div style="clear:both;"></div>
-                            </div>
-                        </div>
-                    `;
-                    return { html: html }
-                },
-
-                // 수정 팝업
-                eventClick: function(info) {
-                    const props = info.event.extendedProps;
-                    const date = info.event.startStr;
-                    const roomName = info.event.title;
-
-                    Swal.fire({
-                        title: `${date} <br> ${roomName}`,
-                        html: `
-                            <div style="text-align:left; font-size:14px; padding: 0 20px;">
-                                <div style="margin-bottom: 10px;">
-                                    <label>💰 가격 (원)</label>
-                                    <input id="swal-price" type="number" class="swal2-input" style="width: 100%; box-sizing: border-box;" value="${props.price}">
-                                </div>
-                                <div style="margin-bottom: 10px;">
-                                    <label>🛏️ 남은 방 (개)</label>
-                                    <input id="swal-stock" type="number" class="swal2-input" style="width: 100%; box-sizing: border-box;" value="${props.stock}">
-                                    <div style="font-size:12px; color:#888; margin-top:4px;">
-                                        * 전체 객실 수: ${props.total_rooms}개
-                                    </div>
-                                </div>
-                                <div style="margin-top:15px; display: flex; align-items: center; justify-content: space-between;">
-                                    <div style="display:flex; align-items:center;">
-                                        <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''} style="transform: scale(1.5); margin-right: 8px;">
-                                        <label for="swal-available">예약 가능</label>
-                                    </div>
-
-                                    <div style="display:flex; align-items:center;">
-                                        <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''} style="transform: scale(1.5); margin-right: 8px; accent-color: #ff6900;">
-                                        <label for="swal-custom" style="color:#ff6900; font-weight:bold;">🏷️ 특가 표시</label>
-                                    </div>
-                                </div>
-                            </div>
-                        `,
-                        showCancelButton: true,
-                        confirmButtonText: '저장하기',
-                        cancelButtonText: '취소',
-                        confirmButtonColor: '#ff6900', 
-                        
-                        preConfirm: async () => {
-                            const newPrice = document.getElementById('swal-price').value;
-                            const newStock = document.getElementById('swal-stock').value;
-                            const newAvailable = document.getElementById('swal-available').checked;
-                            const newIsCustom = document.getElementById('swal-custom').checked;
-
-                            const { error } = await supabase
-                                .from('inventory')
-                                .update({ 
-                                    price: newPrice,
-                                    stock: newStock,
-                                    is_available: newAvailable,
-                                    is_custom: newIsCustom
-                                })
-                                .eq('room_id', props.room_id)
-                                .eq('date', date);
-
-                            if (error) Swal.showValidationMessage(`에러: ${error.message}`);
-                        }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            Swal.fire({ title: '저장 완료!', icon: 'success', timer: 1000, showConfirmButton: false });
-                            calendar.refetchEvents();
-                        }
-                    });
-                }
-            });
-
-            calendar.render();
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 여기에 나중에 실제 데이터를 불러오는 코드를 추가할 예정입니다.
+            // 예: await fetchDashboardData();
+            console.log("대시보드 준비 완료");
         });
     </script>
 
