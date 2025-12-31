@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>insta 파트너센터 - 판매 관리 (진단모드)</title>
+    <title>Insta 파트너센터 - 판매 관리</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -10,11 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* 기본 레이아웃 */
+        /* 스타일 정의 */
         * { box-sizing: border-box; }
         body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background-color: #f5f6f8; height: 100vh; display: flex; }
         
-        /* 사이드바 */
         .sidebar { width: 250px; background-color: #ff6900; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .logo-area { padding: 25px 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; background-color: #ff6900; }
         .menu-list { list-style: none; padding: 0; margin: 0; }
@@ -23,34 +22,27 @@
         .menu-item.active { background-color: #cc5200; font-weight: bold; border-left: none; }
         .menu-item i { margin-right: 15px; width: 20px; text-align: center; }
         
-        /* 메인 컨텐츠 */
         .main-content { flex-grow: 1; overflow-y: auto; padding: 40px; }
         .content-container { max-width: 1400px; margin: 0 auto; }
         .page-title { font-size: 26px; font-weight: bold; color: #333; margin: 0 0 10px 0; }
+        .page-desc { color: #666; font-size: 14px; margin: 0 0 20px 0; }
         
-        /* 달력 스타일 */
         #calendar { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 900px; }
-        .fc-event { cursor: pointer; }
         
-        /* 방 카드 디자인 */
-        .room-card { background-color: #fff; border: 1px solid #eee; border-radius: 4px; padding: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .room-card:hover { border-color: #ffcc80; transform: translateY(-2px); }
+        .room-card { background-color: #fff; border: 1px solid #eee; border-radius: 4px; padding: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 2px; }
+        .room-card:hover { border-color: #ff6900; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; margin-bottom: 4px; }
         .badge-selling { background-color: #66bb6a; }
         .badge-soldout { background-color: #bdbdbd; }
         .badge-custom { background-color: #ff6900; }
         
-        /* [진단용] 에러 메시지 박스 */
-        #error-box {
-            display: none;
-            background-color: #ffebee;
-            color: #c62828;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            border: 1px solid #ef9a9a;
-            font-weight: bold;
-        }
+        .room-name { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 2px; }
+        .room-info { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        .room-price { color: #333; font-weight: bold; }
+        .room-stock { color: #666; }
+        
+        /* 로딩 메시지 */
+        #loading-msg { text-align: center; padding: 20px; font-size: 18px; color: #666; display: none; }
     </style>
 </head>
 <body>
@@ -68,70 +60,50 @@
     <main class="main-content">
         <div class="content-container">
             <h2 class="page-title">판매 캘린더</h2>
-            
-            <div id="error-box"></div>
-
             <p class="page-desc">상품의 판매 상태, 재고, 가격을 날짜별로 관리하세요.</p>
+            <div id="loading-msg">데이터를 불러오는 중입니다...</div>
             <div id='calendar'></div>
         </div>
     </main>
 
     <script>
-        // --- [1] 안전장치: 에러 발생 시 화면에 표시하는 함수 ---
-        function showError(msg) {
-            const box = document.getElementById('error-box');
-            box.style.display = 'block';
-            box.innerHTML = `⚠️ 오류가 발생했습니다: <br>${msg}`;
-            console.error(msg);
-        }
+        // ============================================================
+        // [1] Supabase 설정 (중복 선언 방지를 위해 즉시 실행 함수 사용)
+        // ============================================================
+        (function() {
+            const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0';
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        window.onerror = function(message, source, lineno, colno, error) {
-            showError(`스크립트 에러: ${message}`);
-        };
+            let roomsCache = {};
+            // 방 순서 정의
+            const roomPriority = { 
+                '스탠다드': 1, '디럭스': 2, '프리미엄': 3, 
+                '럭셔리': 4, '트윈': 5, '특실': 6 
+            };
 
-        // --- [2] 라이브러리 로드 확인 ---
-        if (typeof Supabase === 'undefined' && typeof window.supabase === 'undefined') {
-            showError("Supabase 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하거나 새로고침하세요.");
-        }
-        if (typeof FullCalendar === 'undefined') {
-            showError("달력 라이브러리(FullCalendar)를 불러오지 못했습니다. 인터넷 연결을 확인하거나 새로고침하세요.");
-        }
+            document.addEventListener('DOMContentLoaded', function() {
+                var calendarEl = document.getElementById('calendar');
+                var loadingMsg = document.getElementById('loading-msg');
 
-        // --- [3] Supabase 설정 ---
-        const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        let roomsCache = {};
-        const roomPriority = { '스탠다드': 1, '디럭스': 2, '프리미엄': 3, '럭셔리': 4, '트윈': 5, '특실': 6 };
-
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-
-            if (!calendarEl) {
-                showError("달력을 표시할 공간(div)을 찾을 수 없습니다.");
-                return;
-            }
-
-            try {
                 var calendar = new FullCalendar.Calendar(calendarEl, {
                     initialView: 'dayGridMonth',
                     locale: 'ko',
                     height: 'auto',
                     headerToolbar: { left: 'prev', center: 'title', right: 'next' },
                     
-                    // 데이터 가져오기
+                    // 데이터 로딩
                     events: async function(info, successCallback, failureCallback) {
                         try {
-                            // 1. 방 정보 가져오기 (최초 1회)
+                            loadingMsg.style.display = 'block';
+
+                            // 1. 방 정보 가져오기 (없으면 최초 1회 로딩)
                             if (Object.keys(roomsCache).length === 0) {
                                 const { data: rData, error: rError } = await supabase.from('rooms').select('*');
                                 if (rError) throw rError;
-                                if (!rData || rData.length === 0) {
-                                    showError("데이터베이스에 'rooms' 정보가 없습니다. SQL을 실행해주세요.");
-                                    return;
+                                if (rData) {
+                                    rData.forEach(r => { roomsCache[String(r.id)] = r; });
                                 }
-                                rData.forEach(r => { roomsCache[String(r.id)] = r; });
                             }
 
                             // 2. 재고 정보 가져오기
@@ -143,25 +115,24 @@
 
                             if (iError) throw iError;
 
-                            // 3. 데이터 매핑
+                            loadingMsg.style.display = 'none';
+
+                            // 3. 캘린더용 이벤트 데이터로 변환
                             const events = iData
                                 .filter(item => roomsCache[String(item.room_id)])
                                 .map(item => {
                                     const room = roomsCache[String(item.room_id)];
                                     const sortIndex = roomPriority[room.name] || 99;
-                                    const totalRooms = room.total_rooms || 0;
-                                    const reservedCount = Math.max(0, totalRooms - item.stock);
-
+                                    
                                     return {
                                         title: room.name,
                                         start: item.date,
-                                        sortIndex: sortIndex,
+                                        sortIndex: sortIndex, // 정렬 순서
                                         extendedProps: {
                                             room_id: item.room_id,
                                             price: item.price,
                                             stock: item.stock,
-                                            total_rooms: totalRooms,
-                                            reserved_count: reservedCount,
+                                            total_rooms: room.total_rooms,
                                             is_available: item.is_available,
                                             is_custom: item.is_custom
                                         }
@@ -171,33 +142,41 @@
                             successCallback(events);
 
                         } catch (err) {
-                            console.error(err);
-                            showError("데이터 로딩 실패: " + err.message);
+                            console.error("데이터 로딩 실패:", err);
+                            loadingMsg.innerText = "데이터를 불러오지 못했습니다. (새로고침 해주세요)";
                             failureCallback(err);
                         }
                     },
 
-                    // 카드 그리기
+                    // 카드 모양 꾸미기
                     eventContent: function(arg) {
                         let props = arg.event.extendedProps;
                         let price = Number(props.price).toLocaleString();
-                        let badge = (!props.is_available || props.stock <= 0) 
-                            ? `<span class="badge badge-soldout">마감</span>` 
-                            : (props.is_custom ? `<span class="badge badge-custom">특가</span>` : `<span class="badge badge-selling">판매중</span>`);
+                        
+                        let badgeClass = 'badge-selling';
+                        let badgeText = '판매중';
+
+                        if (!props.is_available || props.stock <= 0) {
+                            badgeClass = 'badge-soldout';
+                            badgeText = '마감';
+                        } else if (props.is_custom) {
+                            badgeClass = 'badge-custom';
+                            badgeText = '특가';
+                        }
 
                         return { html: `
                             <div class="room-card">
-                                <div>${badge}</div>
+                                <span class="badge ${badgeClass}">${badgeText}</span>
                                 <div class="room-name">${arg.event.title}</div>
-                                <div style="margin-top:4px;">
-                                    <span class="room-stock">예약 ${props.reserved_count} / 재고 ${props.stock}</span>
+                                <div class="room-info">
+                                    <span class="room-stock">재고 ${props.stock}</span>
                                     <span class="room-price">${price}원</span>
                                 </div>
                             </div>
                         `};
                     },
 
-                    // 클릭 시 수정 (Swal 팝업)
+                    // 클릭 시 수정 팝업 (SweetAlert2)
                     eventClick: function(info) {
                         const props = info.event.extendedProps;
                         const date = info.event.startStr;
@@ -206,21 +185,25 @@
                         Swal.fire({
                             title: `${date} <br> ${roomName}`,
                             html: `
-                                <div style="text-align:left; font-size:14px; padding: 0 20px;">
-                                    <div style="margin-bottom: 10px;">
-                                        <label>💰 가격 (원)</label>
-                                        <input id="swal-price" type="number" class="swal2-input" value="${props.price}">
+                                <div style="text-align:left; padding: 0 10px;">
+                                    <div style="margin-bottom:15px;">
+                                        <label>💰 <strong>가격</strong></label>
+                                        <input id="swal-price" type="number" class="swal2-input" value="${props.price}" style="margin-top:5px;">
                                     </div>
-                                    <div style="margin-bottom: 10px;">
-                                        <label>🛏️ 남은 방 (개)</label>
-                                        <input id="swal-stock" type="number" class="swal2-input" value="${props.stock}">
-                                        <div style="font-size:12px; color:#888; margin-top:4px;">* 전체 객실: ${props.total_rooms}개</div>
+                                    <div style="margin-bottom:15px;">
+                                        <label>🛏️ <strong>재고</strong> (전체: ${props.total_rooms}개)</label>
+                                        <input id="swal-stock" type="number" class="swal2-input" value="${props.stock}" style="margin-top:5px;">
                                     </div>
-                                    <div style="margin-top:15px; display: flex; justify-content: space-between;">
-                                        <div><input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''}> <label for="swal-available">예약 가능</label></div>
-                                        <div><input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''}> <label for="swal-custom" style="color:#ff6900;">특가 표시</label></div>
+                                    <div style="display:flex; gap:20px; align-items:center;">
+                                        <label style="cursor:pointer;">
+                                            <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''}> 예약 가능
+                                        </label>
+                                        <label style="cursor:pointer; color:#ff6900; font-weight:bold;">
+                                            <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''}> 특가 설정
+                                        </label>
                                     </div>
-                                </div>`,
+                                </div>
+                            `,
                             showCancelButton: true,
                             confirmButtonText: '저장하기',
                             cancelButtonText: '취소',
@@ -232,26 +215,26 @@
                                 const newIsCustom = document.getElementById('swal-custom').checked;
 
                                 const { error } = await supabase.from('inventory').update({ 
-                                    price: newPrice, stock: newStock, is_available: newAvailable, is_custom: newIsCustom
+                                    price: newPrice, 
+                                    stock: newStock, 
+                                    is_available: newAvailable, 
+                                    is_custom: newIsCustom 
                                 }).eq('room_id', props.room_id).eq('date', date);
 
-                                if (error) Swal.showValidationMessage(`에러: ${error.message}`);
+                                if (error) Swal.showValidationMessage(`저장 실패: ${error.message}`);
                             }
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 Swal.fire('저장 완료!', '', 'success');
-                                calendar.refetchEvents();
+                                calendar.refetchEvents(); // 달력 새로고침
                             }
                         });
                     }
                 });
 
                 calendar.render();
-
-            } catch (e) {
-                showError("달력 초기화 중 에러: " + e.message);
-            }
-        });
+            });
+        })(); // 즉시 실행 함수 종료
     </script>
 </body>
 </html>
