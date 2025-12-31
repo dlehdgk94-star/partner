@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* 스타일 정의 */
         * { box-sizing: border-box; }
         body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background-color: #f5f6f8; height: 100vh; display: flex; }
         
@@ -41,7 +40,6 @@
         .room-price { color: #333; font-weight: bold; }
         .room-stock { color: #666; }
         
-        /* 로딩 메시지 */
         #loading-msg { text-align: center; padding: 20px; font-size: 18px; color: #666; display: none; }
     </style>
 </head>
@@ -67,19 +65,21 @@
     </main>
 
     <script>
-        // ============================================================
-        // [1] Supabase 설정 (중복 선언 방지를 위해 즉시 실행 함수 사용)
-        // ============================================================
         (function() {
             const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
             const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0';
             const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
             let roomsCache = {};
-            // 방 순서 정의
+            
+            // [정렬 순서 정의] 여기가 핵심!
             const roomPriority = { 
-                '스탠다드': 1, '디럭스': 2, '프리미엄': 3, 
-                '럭셔리': 4, '트윈': 5, '특실': 6 
+                '스탠다드': 1, 
+                '디럭스': 2, 
+                '프리미엄': 3, 
+                '럭셔리': 4, 
+                '트윈': 5, 
+                '특실': 6 
             };
 
             document.addEventListener('DOMContentLoaded', function() {
@@ -91,13 +91,12 @@
                     locale: 'ko',
                     height: 'auto',
                     headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-                    
-                    // 데이터 로딩
+                    eventOrder: 'sortIndex', // sortIndex 기준으로 정렬
+
                     events: async function(info, successCallback, failureCallback) {
                         try {
                             loadingMsg.style.display = 'block';
 
-                            // 1. 방 정보 가져오기 (없으면 최초 1회 로딩)
                             if (Object.keys(roomsCache).length === 0) {
                                 const { data: rData, error: rError } = await supabase.from('rooms').select('*');
                                 if (rError) throw rError;
@@ -106,7 +105,6 @@
                                 }
                             }
 
-                            // 2. 재고 정보 가져오기
                             const { data: iData, error: iError } = await supabase
                                 .from('inventory')
                                 .select('*')
@@ -117,17 +115,17 @@
 
                             loadingMsg.style.display = 'none';
 
-                            // 3. 캘린더용 이벤트 데이터로 변환
                             const events = iData
                                 .filter(item => roomsCache[String(item.room_id)])
                                 .map(item => {
                                     const room = roomsCache[String(item.room_id)];
+                                    // 이름으로 우선순위 찾기
                                     const sortIndex = roomPriority[room.name] || 99;
                                     
                                     return {
                                         title: room.name,
                                         start: item.date,
-                                        sortIndex: sortIndex, // 정렬 순서
+                                        sortIndex: sortIndex, // 여기에 정렬 번호 부여
                                         extendedProps: {
                                             room_id: item.room_id,
                                             price: item.price,
@@ -143,12 +141,11 @@
 
                         } catch (err) {
                             console.error("데이터 로딩 실패:", err);
-                            loadingMsg.innerText = "데이터를 불러오지 못했습니다. (새로고침 해주세요)";
+                            loadingMsg.innerText = "데이터를 불러오지 못했습니다.";
                             failureCallback(err);
                         }
                     },
 
-                    // 카드 모양 꾸미기
                     eventContent: function(arg) {
                         let props = arg.event.extendedProps;
                         let price = Number(props.price).toLocaleString();
@@ -176,7 +173,6 @@
                         `};
                     },
 
-                    // 클릭 시 수정 팝업 (SweetAlert2)
                     eventClick: function(info) {
                         const props = info.event.extendedProps;
                         const date = info.event.startStr;
@@ -226,7 +222,7 @@
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 Swal.fire('저장 완료!', '', 'success');
-                                calendar.refetchEvents(); // 달력 새로고침
+                                calendar.refetchEvents();
                             }
                         });
                     }
@@ -234,7 +230,7 @@
 
                 calendar.render();
             });
-        })(); // 즉시 실행 함수 종료
+        })();
     </script>
 </body>
 </html>
