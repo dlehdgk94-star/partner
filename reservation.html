@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Insta 파트너센터 - 예약 관리</title>
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         /* --- 기본 스타일 --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -237,7 +235,6 @@
     </main>
 
     <script>
-    // [중요] 즉시 실행 함수로 감싸서 변수 충돌 방지
     (function() {
         const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co'
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0'
@@ -246,7 +243,6 @@
         let currentParams = { startDate: '', endDate: '', keyword: '', status: 'all' };
 
         document.addEventListener('DOMContentLoaded', async function() {
-            // DOM Elements
             const dateTrack = document.getElementById('date-track');
             const datePickerInput = document.getElementById('date-picker-input');
             const searchStartDate = document.getElementById('search-start-date');
@@ -297,12 +293,13 @@
                 }
             });
 
+            // [수정 포인트] 7일씩 이동하도록 변경
             document.getElementById('btn-prev').addEventListener('click', () => {
-                centerDate.setDate(centerDate.getDate() - 1);
+                centerDate.setDate(centerDate.getDate() - 7); // -1에서 -7로 변경
                 renderWeek(centerDate);
             });
             document.getElementById('btn-next').addEventListener('click', () => {
-                centerDate.setDate(centerDate.getDate() + 1);
+                centerDate.setDate(centerDate.getDate() + 7); // +1에서 +7로 변경
                 renderWeek(centerDate);
             });
 
@@ -338,7 +335,7 @@
                 fetchReservations(currentParams);
             }
 
-            // --- 상단 캘린더 렌더링 (대실 제거됨) ---
+            // 상단 캘린더 렌더링
             async function renderWeek(pivotDate) {
                 dateTrack.innerHTML = ''; 
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
@@ -394,7 +391,7 @@
 
                     let stayCount = counts[fullDateStr] || 0;
 
-                    // [수정 포인트] 대실 라인 삭제됨
+                    // [대실 라인 삭제됨]
                     box.innerHTML = `
                         <div class="today-badge">오늘</div>
                         <div class="box-header">
@@ -507,7 +504,6 @@
                 tableSummary.innerText = `[${params.startDate}~${params.endDate}] (${statusLabel}) 총 ${bookings.length}개 (확정 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원`;
             }
 
-            // 유틸리티 함수들
             function formatDate(date) { 
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
