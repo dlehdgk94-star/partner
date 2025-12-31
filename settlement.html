@@ -18,12 +18,14 @@
         }
 
         /* 사이드바 스타일 */
-        .sidebar { width: 240px; background-color: #ff6900; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
-        .menu-list { list-style: none; margin-top: 10px; }
-        .menu-item { padding: 15px 20px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+        .sidebar { width: 250px; background-color: #ff6900; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .logo-area { padding: 25px 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; background-color: #ff6900; }
+        
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-item { padding: 18px 25px; color: white; text-decoration: none; display: flex; align-items: center; transition: 0.2s; cursor: pointer; font-size: 16px; font-weight: 500; }
         .menu-item:hover { background-color: #e65c00; }
-        .menu-item.active { background-color: #cc5200; font-weight: bold; }
+        .menu-item.active { background-color: #cc5200; font-weight: bold; border-left: none; }
+        .menu-item i { margin-right: 15px; width: 20px; text-align: center; }
 
         /* 메인 컨텐츠 영역 */
         .main-content { 
@@ -31,16 +33,14 @@
             padding: 40px; 
             overflow-y: auto; 
         }
+        .content-container { max-width: 1400px; margin: 0 auto; }
 
         /* --- [페이지 전용] 정산 내역 스타일 --- */
-        
-        /* 헤더 영역 */
         .page-header { margin-bottom: 30px; }
-        /* 타이틀 색상을 진한 회색으로 변경 (주황색이 너무 많으면 눈이 아플 수 있어 가독성 고려, 원하시면 #ff6900으로 변경 가능) */
         .page-header h2 { font-size: 24px; font-weight: 700; color: #333; margin-bottom: 10px; }
         .page-header p { font-size: 14px; color: #666; }
 
-        /* 탭 메뉴 - 파란색 -> 주황색 변경 */
+        /* 탭 메뉴 */
         .tabs { border-bottom: 1px solid #ddd; margin-bottom: 20px; }
         .tab-item { display: inline-block; padding: 10px 20px; font-weight: 700; color: #ff6900; border-bottom: 3px solid #ff6900; cursor: pointer; }
 
@@ -52,7 +52,7 @@
 
         .label { width: 120px; font-weight: 700; font-size: 14px; color: #333; }
 
-        /* 버튼 그룹 - 활성화 시 파란색 -> 주황색 변경 */
+        /* 버튼 그룹 */
         .btn-group button { background: #fff; border: 1px solid #ddd; padding: 6px 16px; margin-right: 5px; cursor: pointer; font-size: 13px; border-radius: 2px; }
         .btn-group button.active { background-color: #ff6900; color: #fff; border-color: #ff6900; }
 
@@ -66,7 +66,6 @@
         .btn { padding: 8px 24px; font-size: 14px; border-radius: 4px; cursor: pointer; margin-left: 8px; }
         .btn-reset { background: #fff; border: 1px solid #ddd; color: #333; }
         
-        /* 검색 버튼 - 파란색 -> 주황색 변경 */
         .btn-search { background: #ff6900; border: 1px solid #ff6900; color: #fff; }
         .btn-search:hover { background: #e65c00; border-color: #e65c00; }
 
@@ -96,7 +95,7 @@
 <body>
 
     <nav class="sidebar">
-        <div class="sidebar-header">
+        <div class="logo-area">
             <i class="fa-solid fa-hotel"></i> insta 파트너센터
         </div>
         <ul class="menu-list">
@@ -119,80 +118,86 @@
     </nav>
 
     <main class="main-content">
-        <div class="page-header">
-            <h2>정산 내역</h2>
-            <p>날짜별 정산 받을 금액을 확인하세요. 정산일은 예약일 기준 3일 뒤입니다.</p>
-        </div>
-
-        <div class="tabs">
-            <div class="tab-item">정산 내역</div>
-        </div>
-
-        <div class="search-box">
-            <div class="filter-row">
-                <div class="label">조회 기간</div>
-                <div class="btn-group" id="period-btns">
-                    <button data-days="0">오늘</button>
-                    <button class="active" data-days="7">최근 7일</button>
-                    <button data-days="30">최근 1개월</button>
-                </div>
-                <div class="date-picker-group">
-                    <input type="date" id="start-date">
-                    <span>~</span>
-                    <input type="date" id="end-date">
-                    <span style="font-size:18px; margin-left:5px;">📅</span>
-                </div>
+        <div class="content-container">
+            <div class="page-header">
+                <h2>정산 내역</h2>
+                <p>날짜별 정산 받을 금액을 확인하세요. 정산일은 예약일 기준 3일 뒤입니다.</p>
             </div>
 
-            <div class="filter-row">
-                <div class="label">조회 기준일</div>
-                <div class="radio-group">
-                    <label><input type="radio" name="dateBase" value="settlement" checked> 정산일 (예약+3일)</label>
+            <div class="tabs">
+                <div class="tab-item">정산 내역</div>
+            </div>
+
+            <div class="search-box">
+                <div class="filter-row">
+                    <div class="label">조회 기간</div>
+                    <div class="btn-group" id="period-btns">
+                        <button data-days="0">오늘</button>
+                        <button class="active" data-days="7">최근 7일</button>
+                        <button data-days="30">최근 1개월</button>
                     </div>
+                    <div class="date-picker-group">
+                        <input type="date" id="start-date">
+                        <span>~</span>
+                        <input type="date" id="end-date">
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="label">조회 기준일</div>
+                    <div class="radio-group">
+                        <label><input type="radio" name="dateBase" value="settlement" checked> 정산일 (예약+3일)</label>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-reset" id="btn-reset">초기화</button>
+                    <button class="btn btn-search" id="btn-search">검색</button>
+                </div>
             </div>
 
-            <div class="action-buttons">
-                <button class="btn btn-reset" id="btn-reset">초기화</button>
-                <button class="btn btn-search" id="btn-search">검색</button>
+            <div class="list-header">
+                <div class="list-title">
+                    일별 합계 <span class="list-period" id="period-text"></span>
+                </div>
             </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th rowspan="2">정산일</th>
+                        <th rowspan="2">정산 대상 (예약일)</th>
+                        <th rowspan="2">총 판매 금액<br>(예약 결제금)</th>
+                        <th rowspan="2">총 정산 금액<br>(입금가)</th>
+                        <th colspan="2">정산 상태</th>
+                        <th rowspan="2">상세내역</th>
+                    </tr>
+                    <tr>
+                        <th>정산 대기</th>
+                        <th>정산 완료</th>
+                    </tr>
+                </thead>
+                <tbody id="settlement-table-body">
+                    <tr><td colspan="7" class="loading-spinner">데이터를 불러오는 중입니다...</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr id="table-footer">
+                    </tr>
+                </tfoot>
+            </table>
         </div>
-
-        <div class="list-header">
-            <div class="list-title">
-                일별 합계 <span class="list-period" id="period-text"></span>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th rowspan="2">정산일</th>
-                    <th rowspan="2">정산 대상 (예약일)</th>
-                    <th rowspan="2">총 판매 금액<br>(예약 결제금)</th>
-                    <th rowspan="2">총 정산 금액<br>(입금가)</th>
-                    <th colspan="2">정산 상태</th>
-                    <th rowspan="2">상세내역</th>
-                </tr>
-                <tr>
-                    <th>정산 대기</th>
-                    <th>정산 완료</th>
-                </tr>
-            </thead>
-            <tbody id="settlement-table-body">
-                <tr><td colspan="7" class="loading-spinner">데이터를 불러오는 중입니다...</td></tr>
-            </tbody>
-            <tfoot>
-                <tr id="table-footer">
-                </tr>
-            </tfoot>
-        </table>
     </main>
 
     <script>
-        // --- Supabase 설정 (예약페이지와 동일) ---
-        const YOUR_SUPABASE_URL = 'https://eyasihczaqsacenklhns.supabase.co'; 
-        const YOUR_SUPABASE_KEY = 'sb_publishable_KgiOOQUrWJzQTDCZnbhGcw_otKoMO27'; 
-        const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
+        // ==========================================
+        // 1. Supabase 연결 (수정됨: 올바른 키 입력)
+        // ==========================================
+        const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
+        
+        // [중요] 다른 파일들과 통일된 정상 키로 교체했습니다.
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         // --- 전역 변수 ---
         const startDateInput = document.getElementById('start-date');
@@ -255,6 +260,7 @@
         // --- 핵심 데이터 로직 ---
         async function fetchSettlementData() {
             const tbody = document.getElementById('settlement-table-body');
+            const tfoot = document.getElementById('table-footer');
             tbody.innerHTML = '<tr><td colspan="7" class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> 데이터를 조회 중입니다...</td></tr>';
 
             const startStr = startDateInput.value;
@@ -263,15 +269,14 @@
             periodText.innerText = `정산일 기준 ${startStr} ~ ${endStr}`;
 
             // [중요 로직] 
-            // 사용자가 "정산일" 기준으로 검색을 했습니다 (예: 12월 5일 정산건을 보고 싶다).
-            // 정산일 = 예약일 + 3일 이므로,
-            // 검색해야 할 "예약일(created_at)" = 정산일 - 3일 입니다.
+            // 정산일 = 예약일 + 3일
+            // 검색해야 할 "예약일(created_at)" = 정산일 - 3일
             
             const searchStartObj = new Date(startStr);
-            searchStartObj.setDate(searchStartObj.getDate() - 3); // 예약일 기준 검색 시작일
+            searchStartObj.setDate(searchStartObj.getDate() - 3); 
             
             const searchEndObj = new Date(endStr);
-            searchEndObj.setDate(searchEndObj.getDate() - 3); // 예약일 기준 검색 종료일
+            searchEndObj.setDate(searchEndObj.getDate() - 3); 
 
             const queryStart = formatDate(searchStartObj);
             const queryEnd = formatDate(searchEndObj);
@@ -317,7 +322,7 @@
                 if (!groupedData[settlementDateStr]) {
                     groupedData[settlementDateStr] = {
                         settlementDate: settlementDateStr,
-                        bookingDates: new Set(), // 예약일들을 모음 (보통 하루겠지만)
+                        bookingDates: new Set(),
                         sales: 0,
                         settlement: 0,
                         count: 0
@@ -355,7 +360,7 @@
             const todayStr = formatDate(new Date()); // 오늘 날짜
 
             sortedList.forEach(item => {
-                const bookingDateTxt = Array.from(item.bookingDates).sort().join(', '); // 예약일 표시
+                const bookingDateTxt = Array.from(item.bookingDates).sort().join(', ');
 
                 // 정산 상태 판별 (정산일 <= 오늘 이면 완료, 미래면 대기)
                 const isCompleted = item.settlementDate <= todayStr;
