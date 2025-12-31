@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>insta 파트너센터</title>
+    <title>insta 파트너센터 - 판매 관리</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -20,6 +20,8 @@
         .menu-list { list-style: none; padding: 0; margin: 0; }
         .menu-item { padding: 18px 25px; color: white; text-decoration: none; display: flex; align-items: center; transition: 0.2s; cursor: pointer; font-size: 16px; font-weight: 500; }
         .menu-item:hover { background-color: #e65c00; }
+        
+        /* [수정] 판매 관리에 active 클래스 적용 */
         .menu-item.active { background-color: #cc5200; color: white; font-weight: bold; border-left: none; }
         .menu-item i { margin-right: 15px; width: 20px; text-align: center; }
         
@@ -55,8 +57,10 @@
         <div class="logo-area"><i class="fa-solid fa-hotel"></i> insta 파트너센터</div>
         <ul class="menu-list">
             <li class="menu-item" onclick="location.href='index.html'"><i class="fa-solid fa-house"></i> 홈</li>
-            <li class="menu-item" onclick="location.href='pay.html'"><i class="fa-solid fa-calendar-check"></i> 판매 관리</li>
-            <li class="menu-item active" onclick="location.href='reservation.html'"><i class="fa-solid fa-list-check"></i> 예약</li>
+            
+            <li class="menu-item active" onclick="location.href='pay.html'"><i class="fa-solid fa-calendar-check"></i> 판매 관리</li>
+            
+            <li class="menu-item" onclick="location.href='reservation.html'"><i class="fa-solid fa-list-check"></i> 예약</li>
             <li class="menu-item" onclick="location.href='settlement.html'"><i class="fa-solid fa-calculator"></i> 정산</li>
         </ul>
     </nav>
