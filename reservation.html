@@ -117,7 +117,7 @@
         .room-type { font-weight: bold; display: block; }
         .stay-info { font-size: 0.8rem; color: #ff6900; }
         
-        .request-text { font-size: 0.85rem; color: #555; text-align: left; max-width: 150px; line-height: 1.4; }
+        .request-text { font-size: 0.85rem; color: #555; text-align: left; max-width: 150px; line-height: 1.4; word-break: keep-all; }
         .sns-info { display: flex; flex-direction: column; gap: 4px; text-align: left; font-size: 0.8rem; color: #444; }
         .sns-item { display: flex; align-items: center; gap: 6px; }
         .sns-item i { width: 16px; text-align: center; color: #888; }
@@ -254,7 +254,7 @@
             const tableSummary = document.getElementById('table-summary');
             const statusTabs = document.querySelectorAll('#status-tabs-container button');
 
-            // 1. 객실 이름 매핑
+            // 1. 객실 이름 매핑 (bookings 테이블에 room_id만 있을 경우를 대비해 rooms 테이블에서 이름 조회)
             let roomMap = {}; 
             async function fetchRoomNames() {
                 const { data: rooms } = await supabase.from('rooms').select('id, name');
@@ -262,7 +262,7 @@
             }
             await fetchRoomNames(); 
 
-            // 2. 날짜 초기화
+            // 2. 날짜 초기화 (오늘 기준)
             let centerDate = new Date(); 
             const todayStr = formatDate(new Date());
             searchStartDate.value = todayStr;
@@ -274,7 +274,7 @@
             renderWeek(centerDate);
             fetchReservations(currentParams);
 
-            // 이벤트 리스너
+            // 이벤트 리스너 등록
             document.getElementById('btn-today').addEventListener('click', () => {
                 const today = new Date();
                 centerDate = new Date(today);
@@ -293,13 +293,12 @@
                 }
             });
 
-            // [수정 포인트] 7일씩 이동하도록 변경
             document.getElementById('btn-prev').addEventListener('click', () => {
-                centerDate.setDate(centerDate.getDate() - 7); // -1에서 -7로 변경
+                centerDate.setDate(centerDate.getDate() - 7); // 1주일 단위 이동
                 renderWeek(centerDate);
             });
             document.getElementById('btn-next').addEventListener('click', () => {
-                centerDate.setDate(centerDate.getDate() + 7); // +1에서 +7로 변경
+                centerDate.setDate(centerDate.getDate() + 7); // 1주일 단위 이동
                 renderWeek(centerDate);
             });
 
@@ -341,6 +340,7 @@
                 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
                 const datesToShow = [];
                 
+                // pivotDate 기준으로 앞뒤 3일 (총 7일) 생성
                 for (let i = -3; i <= 3; i++) {
                     const tempDate = new Date(pivotDate);
                     tempDate.setDate(tempDate.getDate() + i);
@@ -350,7 +350,7 @@
                 const startDateStr = formatDate(datesToShow[0]);
                 const endDateStr = formatDate(datesToShow[datesToShow.length - 1]);
 
-                // 예약 건수 가져오기
+                // 해당 주간의 예약 건수 조회 (숙박 숫자 표시용)
                 const { data: bookings } = await supabase
                     .from('bookings')
                     .select('check_in') 
@@ -373,6 +373,7 @@
                     const dayNum = dateObj.getDay();
                     const dayName = dayNames[dayNum];
                     const fullDateStr = `${yyyy}-${mm}-${dd}`;
+                    const todayStr = formatDate(new Date());
 
                     const box = document.createElement('div');
                     box.className = 'date-box';
@@ -382,6 +383,7 @@
                     
                     if (fullDateStr === searchStartDate.value) box.classList.add('active');
 
+                    // 날짜 박스 클릭 시 해당 날짜로 검색
                     box.addEventListener('click', () => {
                         centerDate = new Date(dateObj); 
                         renderWeek(centerDate); 
@@ -391,7 +393,6 @@
 
                     let stayCount = counts[fullDateStr] || 0;
 
-                    // [대실 라인 삭제됨]
                     box.innerHTML = `
                         <div class="today-badge">오늘</div>
                         <div class="box-header">
@@ -427,7 +428,8 @@
 
                 const { data: bookings, error } = await query;
                 if (error) {
-                    reservationList.innerHTML = '<tr><td colspan="9">데이터 조회 실패</td></tr>';
+                    console.error("예약 조회 오류:", error);
+                    reservationList.innerHTML = '<tr><td colspan="9" style="padding:20px; text-align:center;">데이터 조회 실패</td></tr>';
                     return;
                 }
                 renderTableRows(bookings, params);
@@ -446,7 +448,7 @@
                 bookings.forEach(booking => {
                     const isCancelled = (booking.status === 'cancelled');
                     const totalPrice = Number(booking.total_price || 0);
-                    const settlementPrice = Math.floor(totalPrice * 0.97);
+                    const settlementPrice = Math.floor(totalPrice * 0.97); // 입금가 (수수료 3% 제외 예시)
 
                     if (!isCancelled) {
                         completedCount++;
@@ -455,21 +457,33 @@
                         cancelledCount++;
                     }
 
+                    // 상태 배지 및 버튼
                     let statusBadge = isCancelled ? '<span style="color:#e74c3c; font-weight:bold;">취소</span>' : '<span style="color:#2ecc71; font-weight:bold;">예약확정</span>';
                     let actionBtn = isCancelled 
                         ? `<span style="font-size:0.75rem; color:#aaa;">${booking.cancelled_at ? formatDate(new Date(booking.cancelled_at))+' 취소됨' : '-'}</span>`
                         : `<button class="btn-cancel" onclick="cancelBooking(${booking.id}, '${booking.guest_name}')">예약 취소</button>`;
 
-                    const roomName = roomMap[booking.room_id] || `객실 ${booking.room_id}`;
+                    // 방 이름 (id로 매핑 or booking테이블의 room_name 사용)
+                    const roomName = roomMap[booking.room_id] || booking.room_name || `객실 ${booking.room_id}`;
+                    
+                    // 날짜 계산
                     const checkInDate = new Date(booking.check_in);
                     const checkOutDate = new Date(booking.check_out);
                     const createdDate = new Date(booking.created_at);
                     const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
                     const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
+                    // 옵션 파싱
                     let optionsHtml = '<span style="color:#ccc; font-size:0.8rem;">선택안함</span>';
-                    if (booking.selected_options && Array.isArray(booking.selected_options) && booking.selected_options.length > 0) {
-                        optionsHtml = `<div class="option-wrapper">` + booking.selected_options.map(opt => `<span class="option-badge">${opt}</span>`).join('') + `</div>`;
+                    if (booking.selected_options) {
+                         // JSONB 배열이거나 문자열일 수 있음
+                        let opts = booking.selected_options;
+                        if (typeof opts === 'string') {
+                            try { opts = JSON.parse(opts); } catch(e) {}
+                        }
+                        if (Array.isArray(opts) && opts.length > 0) {
+                            optionsHtml = `<div class="option-wrapper">` + opts.map(opt => `<span class="option-badge">${opt}</span>`).join('') + `</div>`;
+                        }
                     }
 
                     html += `
@@ -504,6 +518,7 @@
                 tableSummary.innerText = `[${params.startDate}~${params.endDate}] (${statusLabel}) 총 ${bookings.length}개 (확정 ${completedCount} / 취소 ${cancelledCount}) | 매출액 ${totalRevenue.toLocaleString()}원`;
             }
 
+            // 유틸리티 함수들
             function formatDate(date) { 
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -527,13 +542,22 @@
                 searchEndDate.value = formatDate(end);
             }
 
+            // 전역 취소 함수 (window 객체에 등록하여 HTML에서 호출 가능하게 함)
             window.cancelBooking = async function(bookingId, guestName) {
                 if(confirm(`[${guestName}] 고객님의 예약을 정말 취소하시겠습니까?`)) {
-                    const { error } = await supabase.from('bookings').update({ status: 'cancelled', cancelled_at: new Date() }).eq('id', bookingId);
-                    if(error) alert("취소 실패: " + error.message);
-                    else {
+                    // status를 cancelled로 변경하고 취소 시간을 기록
+                    const { error } = await supabase
+                        .from('bookings')
+                        .update({ status: 'cancelled', cancelled_at: new Date() })
+                        .eq('id', bookingId);
+
+                    if(error) {
+                        alert("취소 처리에 실패했습니다: " + error.message);
+                    } else {
                         alert("예약이 취소되었습니다.");
+                        // 현재 검색 조건으로 목록 갱신
                         fetchReservations(currentParams);
+                        // 캘린더 카운트도 갱신
                         renderWeek(centerDate);
                     }
                 }
