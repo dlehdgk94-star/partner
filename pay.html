@@ -104,6 +104,7 @@
 
     <script>
         (function() {
+            // Supabase 설정
             const supabaseUrl = 'https://eyasihczaqsacenklhns.supabase.co';
             const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YXNpaGN6YXFzYWNlbmtsaG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjY5MTIsImV4cCI6MjA3OTk0MjkxMn0.E1J5qEgl79Ato3upXJSL0OyrgsOw6gJbNHo88AWdct0';
             const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -231,13 +232,16 @@
                         `};
                     },
 
+                    // ==========================================
+                    // ★ 여기가 수정된 부분입니다 (DB 저장 로직) ★
+                    // ==========================================
                     eventClick: function(info) {
                         const date = info.event.startStr;
                         let eventDate = new Date(date);
                         let today = new Date();
-                        today.setHours(0,0,0,0);
+                        today.setHours(0, 0, 0, 0);
 
-                        // 지난 날짜 클릭 방지
+                        // 1. 지난 날짜 클릭 방지
                         if (eventDate < today) {
                             Swal.fire({
                                 icon: 'warning',
@@ -253,24 +257,25 @@
                         const props = info.event.extendedProps;
                         const roomName = info.event.title;
 
+                        // 2. 팝업 띄우기
                         Swal.fire({
-                            title: `${date} <br> ${roomName}`,
+                            title: `<span style="font-size:18px; color:#666;">${date}</span><br><span style="font-size:24px; color:#333;">${roomName}</span>`,
                             html: `
                                 <div style="text-align:left; padding: 0 10px;">
                                     <div style="margin-bottom:15px;">
-                                        <label>💰 <strong>가격</strong></label>
+                                        <label>💰 <strong>가격</strong> (현재: ${Number(props.price).toLocaleString()}원)</label>
                                         <input id="swal-price" type="number" class="swal2-input" value="${props.price}" style="margin-top:5px;">
                                     </div>
                                     <div style="margin-bottom:15px;">
                                         <label>🛏️ <strong>재고</strong> (전체: ${props.total_rooms}개)</label>
                                         <input id="swal-stock" type="number" class="swal2-input" value="${props.stock}" style="margin-top:5px;">
                                     </div>
-                                    <div style="display:flex; gap:20px; align-items:center;">
-                                        <label style="cursor:pointer;">
-                                            <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''}> 예약 가능
+                                    <div style="display:flex; gap:20px; align-items:center; margin-top:10px;">
+                                        <label style="cursor:pointer; display:flex; align-items:center;">
+                                            <input type="checkbox" id="swal-available" ${props.is_available ? 'checked' : ''} style="width:18px; height:18px; margin-right:8px;"> 예약 가능
                                         </label>
-                                        <label style="cursor:pointer; color:#ff6900; font-weight:bold;">
-                                            <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''}> 특가 설정
+                                        <label style="cursor:pointer; color:#ff6900; font-weight:bold; display:flex; align-items:center;">
+                                            <input type="checkbox" id="swal-custom" ${props.is_custom ? 'checked' : ''} style="width:18px; height:18px; margin-right:8px;"> 특가 설정
                                         </label>
                                     </div>
                                 </div>
@@ -279,24 +284,54 @@
                             confirmButtonText: '저장하기',
                             cancelButtonText: '취소',
                             confirmButtonColor: '#ff6900',
+                            
+                            // 3. 실제 저장 로직
                             preConfirm: async () => {
-                                const newPrice = document.getElementById('swal-price').value;
-                                const newStock = document.getElementById('swal-stock').value;
+                                // 입력값 가져오기 (숫자 변환 필수!)
+                                const newPrice = Number(document.getElementById('swal-price').value);
+                                const newStock = Number(document.getElementById('swal-stock').value);
                                 const newAvailable = document.getElementById('swal-available').checked;
                                 const newIsCustom = document.getElementById('swal-custom').checked;
 
-                                const { error } = await supabase.from('inventory').update({ 
-                                    price: newPrice, 
-                                    stock: newStock, 
-                                    is_available: newAvailable, 
-                                    is_custom: newIsCustom 
-                                }).eq('room_id', props.room_id).eq('date', date);
+                                // 유효성 검사
+                                if (newPrice < 0 || newStock < 0) {
+                                    Swal.showValidationMessage('가격과 재고는 0보다 작을 수 없습니다.');
+                                    return false;
+                                }
 
-                                if (error) Swal.showValidationMessage(`저장 실패: ${error.message}`);
+                                try {
+                                    // Supabase Update
+                                    const { data, error } = await supabase
+                                        .from('inventory')
+                                        .update({ 
+                                            price: newPrice,         
+                                            stock: newStock,         
+                                            is_available: newAvailable, 
+                                            is_custom: newIsCustom      
+                                        })
+                                        .eq('room_id', props.room_id)
+                                        .eq('date', date)
+                                        .select(); // 업데이트 결과 반환 요청
+
+                                    if (error) throw error;
+                                    return data;
+
+                                } catch (error) {
+                                    console.error('Update Error:', error);
+                                    Swal.showValidationMessage(`저장 실패: ${error.message}`);
+                                }
                             }
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                Swal.fire('저장 완료!', '', 'success');
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '저장 완료!',
+                                    text: '성공적으로 수정되었습니다.',
+                                    confirmButtonColor: '#ff6900',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                // 캘린더 새로고침
                                 calendar.refetchEvents();
                             }
                         });
